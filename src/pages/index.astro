@@ -8,67 +8,1332 @@ export const prerender = false;
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width" />
   <title>MCST DPO Registry Research</title>
+
   <style>
-    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e8edf5;background:#090d14;color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#090d14}.shell{max-width:1500px;margin:auto;padding:32px}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:28px}h1{font-size:28px;margin:0 0 8px}p{margin:0;color:#93a0b5}.actions{display:flex;gap:10px;flex-wrap:wrap}button,a.button{border:1px solid #283244;background:#151c28;color:#edf2fa;border-radius:8px;padding:10px 14px;font-weight:650;text-decoration:none;cursor:pointer}button.primary{background:#edf2fa;color:#0b1018}button:disabled{opacity:.45;cursor:not-allowed}.cards{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:12px;margin-bottom:20px}.card{background:#101620;border:1px solid #222c3b;border-radius:10px;padding:16px}.label{font-size:12px;color:#8290a5;text-transform:uppercase;letter-spacing:.06em}.value{font-size:26px;font-weight:700;margin-top:7px}.panel{background:#101620;border:1px solid #222c3b;border-radius:10px;overflow:hidden}.toolbar{display:flex;gap:12px;align-items:center;padding:14px;border-bottom:1px solid #222c3b}.toolbar input{flex:1;max-width:430px;background:#090d14;border:1px solid #2a3547;color:#fff;border-radius:7px;padding:10px 12px}.status{font-size:13px;color:#9aa7ba;margin-left:auto}.tablewrap{overflow:auto;max-height:65vh}table{border-collapse:collapse;width:100%;min-width:1200px}th,td{text-align:left;padding:11px 12px;border-bottom:1px solid #202938;font-size:13px;vertical-align:top}th{position:sticky;top:0;background:#151c28;color:#9eacc0;font-size:11px;text-transform:uppercase;letter-spacing:.04em}td{color:#dce3ed}.yes{font-weight:700}.warn{color:#f1c66d}.empty{padding:42px;text-align:center;color:#7f8da2}.note{font-size:12px;color:#718096;margin-top:12px}@media(max-width:950px){.top{display:block}.actions{margin-top:18px}.cards{grid-template-columns:repeat(2,1fr)}}
+    :root {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #e8edf5;
+      background: #090d14;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #090d14;
+    }
+
+    .shell {
+      max-width: 1500px;
+      margin: auto;
+      padding: 32px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin: 0 0 8px;
+    }
+
+    h2 {
+      margin: 0 0 6px;
+      font-size: 19px;
+    }
+
+    p {
+      margin: 0;
+      color: #93a0b5;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button,
+    a.button {
+      border: 1px solid #283244;
+      background: #151c28;
+      color: #edf2fa;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 650;
+      text-decoration: none;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    button.primary {
+      background: #edf2fa;
+      color: #0b1018;
+    }
+
+    button.danger {
+      border-color: #6c3b3b;
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .card,
+    .panel {
+      background: #101620;
+      border: 1px solid #222c3b;
+      border-radius: 10px;
+    }
+
+    .card {
+      padding: 16px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: #8290a5;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .value {
+      font-size: 26px;
+      font-weight: 700;
+      margin-top: 7px;
+    }
+
+    .lookup {
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .lookup-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .lookup-state {
+      font-size: 13px;
+      color: #9aa7ba;
+    }
+
+    .lookup-grid {
+      display: grid;
+      grid-template-columns: 140px minmax(180px, 1fr) minmax(220px, 1.5fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .fieldbox {
+      background: #090d14;
+      border: 1px solid #273244;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .fieldvalue {
+      margin-top: 6px;
+      font-size: 15px;
+      font-weight: 650;
+      word-break: break-word;
+    }
+
+    .workflow-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .instructions {
+      border-top: 1px solid #222c3b;
+      padding-top: 16px;
+      color: #8e9caf;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .result-editor {
+      display: none;
+      border-top: 1px solid #222c3b;
+      padding-top: 18px;
+      margin-top: 18px;
+    }
+
+    .result-editor.active {
+      display: block;
+    }
+
+    .editor-row {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1.2fr 1.5fr auto;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    input,
+    select {
+      width: 100%;
+      background: #090d14;
+      border: 1px solid #2a3547;
+      color: #fff;
+      border-radius: 7px;
+      padding: 10px 12px;
+      font: inherit;
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .panel {
+      overflow: hidden;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border-bottom: 1px solid #222c3b;
+    }
+
+    .toolbar input {
+      flex: 1;
+      max-width: 430px;
+    }
+
+    .status {
+      font-size: 13px;
+      color: #9aa7ba;
+      margin-left: auto;
+    }
+
+    .tablewrap {
+      overflow: auto;
+      max-height: 58vh;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 1200px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 11px 12px;
+      border-bottom: 1px solid #202938;
+      font-size: 13px;
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #151c28;
+      color: #9eacc0;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    td {
+      color: #dce3ed;
+    }
+
+    .yes {
+      font-weight: 700;
+    }
+
+    .warn {
+      color: #f1c66d;
+    }
+
+    .empty {
+      padding: 42px;
+      text-align: center;
+      color: #7f8da2;
+    }
+
+    .note {
+      font-size: 12px;
+      color: #718096;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+
+    @media(max-width: 950px) {
+      .top,
+      .lookup-header {
+        display: block;
+      }
+
+      .actions {
+        margin-top: 18px;
+      }
+
+      .cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .lookup-grid,
+      .editor-row {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
+
 <body>
 <main class="shell">
+
   <div class="top">
-    <div><h1>MCST DPO Registry Research</h1><p>BCA MCST population reconciled against the PDPC DPO Registry using UEN as the primary identity key.</p></div>
+    <div>
+      <h1>MCST DPO Registry Research</h1>
+      <p>
+        BCA MCST population reconciled against the PDPC DPO Registry
+        using UEN as the primary identity key.
+      </p>
+    </div>
+
     <div class="actions">
       <button id="sync" class="primary">Sync MCST Records</button>
-      <button id="run">Run DPO Lookup</button>
-      <button id="stop" disabled>Stop</button>
       <button id="retry">Retry Failed</button>
       <a class="button" href="/api/export.xlsx">Export Excel</a>
     </div>
   </div>
 
+
   <section class="cards">
-    <div class="card"><div class="label">MCST population</div><div class="value" id="total">0</div></div>
-    <div class="card"><div class="label">Checked</div><div class="value" id="checked">0</div></div>
-    <div class="card"><div class="label">MCSTs with DPO</div><div class="value" id="withDpo">0</div></div>
-    <div class="card"><div class="label">DPO rows</div><div class="value" id="dpoRows">0</div></div>
-    <div class="card"><div class="label">Discrepancies</div><div class="value" id="discrepancies">0</div></div>
+    <div class="card">
+      <div class="label">MCST population</div>
+      <div class="value" id="total">0</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Checked</div>
+      <div class="value" id="checked">0</div>
+    </div>
+
+    <div class="card">
+      <div class="label">MCSTs with DPO</div>
+      <div class="value" id="withDpo">0</div>
+    </div>
+
+    <div class="card">
+      <div class="label">DPO rows</div>
+      <div class="value" id="dpoRows">0</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Discrepancies</div>
+      <div class="value" id="discrepancies">0</div>
+    </div>
   </section>
 
-  <section class="panel">
-    <div class="toolbar">
-      <input id="search" placeholder="Search MCST, estate, UEN, DPO name or email" />
-      <div class="status" id="status">Ready</div>
+
+  <section class="panel lookup">
+
+    <div class="lookup-header">
+      <div>
+        <h2>PDPC Registry Lookup</h2>
+        <p>
+          Review each MCST against the official PDPC registry.
+        </p>
+      </div>
+
+      <div
+        class="lookup-state"
+        id="lookupState"
+      >
+        No MCST selected
+      </div>
     </div>
-    <div class="tablewrap">
-      <table>
-        <thead><tr><th>MCST#</th><th>Estate Name</th><th>UEN</th><th>DPO(Y/N)</th><th>DPO Name</th><th>DPO Email</th><th>DPO Company</th><th>Record Discrepancy(Y/N)</th></tr></thead>
-        <tbody id="rows"><tr><td colspan="8" class="empty">No records loaded.</td></tr></tbody>
-      </table>
+
+
+    <div class="lookup-grid">
+      <div class="fieldbox">
+        <div class="label">MCST#</div>
+        <div
+          class="fieldvalue"
+          id="lookupMcst"
+        >—</div>
+      </div>
+
+      <div class="fieldbox">
+        <div class="label">UEN</div>
+        <div
+          class="fieldvalue"
+          id="lookupUen"
+        >—</div>
+      </div>
+
+      <div class="fieldbox">
+        <div class="label">Estate Name</div>
+        <div
+          class="fieldvalue"
+          id="lookupEstate"
+        >—</div>
+      </div>
     </div>
+
+
+    <div class="workflow-actions">
+
+      <button
+        id="nextLookup"
+        class="primary"
+      >
+        Get Next MCST
+      </button>
+
+      <a
+        id="openPdpc"
+        class="button"
+        href="https://www.pdpc.gov.sg/individuals/e-services/data-protection-officers-dpo-registry"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Open PDPC Registry
+      </a>
+
+      <button
+        id="copyUen"
+        disabled
+      >
+        Copy UEN
+      </button>
+
+      <button
+        id="found"
+        disabled
+      >
+        DPO Result Found
+      </button>
+
+      <button
+        id="notFound"
+        disabled
+      >
+        No Registry Result
+      </button>
+
+      <button
+        id="verification"
+        disabled
+      >
+        Verification Required
+      </button>
+
+    </div>
+
+
+    <div class="instructions">
+      Search the PDPC Registry using the displayed UEN first.
+      Complete any PDPC human verification yourself in the official
+      registry page. If records are returned, enter every DPO row
+      exactly as shown. If the completed search returns no record,
+      use <strong>No Registry Result</strong>. A verification prompt
+      is not a no-result outcome.
+    </div>
+
+
+    <div
+      class="result-editor"
+      id="resultEditor"
+    >
+      <div class="label">
+        PDPC observations
+      </div>
+
+      <div
+        id="observationRows"
+        style="margin-top:10px"
+      ></div>
+
+      <div class="editor-actions">
+        <button id="addObservation">
+          + Add DPO
+        </button>
+
+        <button
+          id="submitFound"
+          class="primary"
+        >
+          Save DPO Result
+        </button>
+
+        <button id="cancelFound">
+          Cancel
+        </button>
+      </div>
+    </div>
+
   </section>
-  <div class="note">“DPO = N” means no registration was found in the completed PDPC Registry lookup; it does not prove that the MCST has not appointed a DPO elsewhere.</div>
+
+
+  <section class="panel">
+
+    <div class="toolbar">
+
+      <input
+        id="search"
+        placeholder="Search MCST, estate, UEN, DPO name or email"
+      />
+
+      <div
+        class="status"
+        id="status"
+      >
+        Ready
+      </div>
+
+    </div>
+
+
+    <div class="tablewrap">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>MCST#</th>
+            <th>Estate Name</th>
+            <th>UEN</th>
+            <th>DPO(Y/N)</th>
+            <th>DPO Name</th>
+            <th>DPO Email</th>
+            <th>DPO Company</th>
+            <th>Record Discrepancy(Y/N)</th>
+          </tr>
+        </thead>
+
+        <tbody id="rows">
+          <tr>
+            <td
+              colspan="8"
+              class="empty"
+            >
+              No records loaded.
+            </td>
+          </tr>
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+
+  <div class="note">
+    “DPO = N” means no registration was found in a completed PDPC
+    Registry lookup. It does not establish that the MCST has no
+    appointed DPO outside the registry.
+  </div>
+
 </main>
+
+
 <script>
-  const $ = (id) => document.getElementById(id);
-  let running = false;
+  const $ = (id) =>
+    document.getElementById(id);
+
+  let currentJob = null;
   let searchTimer;
-  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  function renderRows(rows){
-    const body=$('rows');
-    if(!rows?.length){body.innerHTML='<tr><td colspan="8" class="empty">No matching records.</td></tr>';return;}
-    body.innerHTML=rows.map(r=>`<tr><td>${esc(r['MCST#'])}</td><td>${esc(r['Estate Name'])}</td><td>${esc(r['UEN'])}</td><td class="yes">${esc(r['DPO(Y/N)'])}</td><td>${esc(r['DPO Name'])}</td><td>${esc(r['DPO Email'])}</td><td>${esc(r['DPO Company'])}</td><td class="${r['Record Discrepancy(Y/N)']==='Y'?'warn':''}">${esc(r['Record Discrepancy(Y/N)'])}</td></tr>`).join('');
+
+
+  const esc = (value) =>
+    String(value ?? '')
+      .replace(
+        /[&<>"']/g,
+        (character) => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+        })[character],
+      );
+
+
+  function setStatus(message) {
+    $('status').textContent = message;
   }
-  async function status(){
-    const r=await fetch('/api/status',{cache:'no-store'}); const d=await r.json(); if(!d.ok) throw new Error(d.error||'Status failed');
-    $('total').textContent=d.population.totalMcsts.toLocaleString(); $('checked').textContent=d.results.checkedMcsts.toLocaleString(); $('withDpo').textContent=d.results.mcstsWithDpo.toLocaleString(); $('dpoRows').textContent=d.results.dpoRows.toLocaleString(); $('discrepancies').textContent=d.results.discrepancies.toLocaleString();
-    $('status').textContent=`${d.queue.completionPercent}% complete · ${d.queue.pending} pending · ${d.queue.failed} failed`;
+
+
+  function setLookupControls(enabled) {
+    $('copyUen').disabled =
+      !enabled || !currentJob?.uen;
+
+    $('found').disabled =
+      !enabled;
+
+    $('notFound').disabled =
+      !enabled;
+
+    $('verification').disabled =
+      !enabled;
   }
-  async function loadRows(){ const r=await fetch('/api/records',{cache:'no-store'}); const d=await r.json(); if(!d.ok) throw new Error(d.error||'Records failed'); renderRows(d.rows); }
-  $('sync').onclick=async()=>{ try{$('sync').disabled=true;$('status').textContent='Synchronising BCA…'; const r=await fetch('/api/sync-bca',{method:'POST'}); const d=await r.json(); if(!d.ok) throw new Error(d.error); await status(); await loadRows();}catch(e){$('status').textContent=e.message||String(e)}finally{$('sync').disabled=false} };
-  $('retry').onclick=async()=>{try{await fetch('/api/retry-failed',{method:'POST'});await status()}catch(e){$('status').textContent=e.message||String(e)}};
-  $('run').onclick=async()=>{running=true;$('run').disabled=true;$('stop').disabled=false;try{while(running){const r=await fetch('/api/run-batch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({batchSize:3})});const d=await r.json();if(!d.ok)throw new Error(d.error);await status();if(d.paused){$('status').textContent=d.message||'PDPC verification required.';break}if(d.done)break;if(!d.processed&&!d.failed?.length)break;}await loadRows()}catch(e){$('status').textContent=e.message||String(e)}finally{running=false;$('run').disabled=false;$('stop').disabled=true}};
-  $('stop').onclick=()=>{running=false;$('status').textContent='Stopping after current batch…'};
-  $('search').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(async()=>{const q=$('search').value.trim();if(!q){await loadRows();return}try{const r=await fetch('/api/search?q='+encodeURIComponent(q));const d=await r.json();if(!d.ok)throw new Error(d.error);renderRows(d.rows)}catch(e){$('status').textContent=e.message||String(e)}},250)});
-  Promise.all([status(),loadRows()]).catch(e=>$('status').textContent=e.message||String(e));
+
+
+  function renderCurrentJob() {
+    $('lookupMcst').textContent =
+      currentJob?.mcstNo || '—';
+
+    $('lookupUen').textContent =
+      currentJob?.uen || '—';
+
+    $('lookupEstate').textContent =
+      currentJob?.estateName || '—';
+
+    $('lookupState').textContent =
+      currentJob
+        ? 'Awaiting PDPC result'
+        : 'No MCST selected';
+
+    setLookupControls(
+      Boolean(currentJob),
+    );
+  }
+
+
+  function clearEditor() {
+    $('resultEditor')
+      .classList
+      .remove('active');
+
+    $('observationRows')
+      .innerHTML = '';
+  }
+
+
+  function addObservationRow(
+    observation = {},
+  ) {
+    const container =
+      $('observationRows');
+
+    const row =
+      document.createElement('div');
+
+    row.className =
+      'editor-row observation-row';
+
+    row.innerHTML = `
+      <input
+        class="organisation"
+        placeholder="PDPC Entity Name"
+        value="${esc(
+          observation.organisationName ||
+          ''
+        )}"
+      />
+
+      <input
+        class="observation-uen"
+        placeholder="Returned UEN"
+        value="${esc(
+          observation.uen ||
+          currentJob?.uen ||
+          ''
+        )}"
+      />
+
+      <input
+        class="dpo-name"
+        placeholder="DPO Name"
+        value="${esc(
+          observation.dpoName ||
+          ''
+        )}"
+      />
+
+      <input
+        class="dpo-email"
+        placeholder="DPO Email"
+        value="${esc(
+          observation.dpoEmail ||
+          ''
+        )}"
+      />
+
+      <button
+        type="button"
+        class="remove-observation danger"
+      >
+        Remove
+      </button>
+    `;
+
+    row
+      .querySelector(
+        '.remove-observation',
+      )
+      .addEventListener(
+        'click',
+        () => {
+          row.remove();
+
+          if (
+            !container.querySelector(
+              '.observation-row',
+            )
+          ) {
+            addObservationRow();
+          }
+        },
+      );
+
+    container.appendChild(row);
+  }
+
+
+  function collectObservations() {
+    return Array.from(
+      document.querySelectorAll(
+        '.observation-row',
+      ),
+    )
+      .map((row) => ({
+        organisationName:
+          row
+            .querySelector(
+              '.organisation',
+            )
+            .value
+            .trim(),
+
+        uen:
+          row
+            .querySelector(
+              '.observation-uen',
+            )
+            .value
+            .trim(),
+
+        dpoName:
+          row
+            .querySelector(
+              '.dpo-name',
+            )
+            .value
+            .trim(),
+
+        dpoEmail:
+          row
+            .querySelector(
+              '.dpo-email',
+            )
+            .value
+            .trim(),
+
+        dpoCompany: '',
+      }))
+      .filter(
+        (row) =>
+          row.organisationName ||
+          row.uen ||
+          row.dpoName ||
+          row.dpoEmail,
+      );
+  }
+
+
+  function renderRows(rows) {
+    const body = $('rows');
+
+    if (!rows?.length) {
+      body.innerHTML =
+        '<tr><td colspan="8" class="empty">No matching records.</td></tr>';
+
+      return;
+    }
+
+    body.innerHTML =
+      rows
+        .map(
+          (row) => `
+            <tr>
+              <td>${esc(row['MCST#'])}</td>
+              <td>${esc(row['Estate Name'])}</td>
+              <td>${esc(row['UEN'])}</td>
+
+              <td class="yes">
+                ${esc(row['DPO(Y/N)'])}
+              </td>
+
+              <td>
+                ${esc(row['DPO Name'])}
+              </td>
+
+              <td>
+                ${esc(row['DPO Email'])}
+              </td>
+
+              <td>
+                ${esc(row['DPO Company'])}
+              </td>
+
+              <td
+                class="${
+                  row[
+                    'Record Discrepancy(Y/N)'
+                  ] === 'Y'
+                    ? 'warn'
+                    : ''
+                }"
+              >
+                ${esc(
+                  row[
+                    'Record Discrepancy(Y/N)'
+                  ],
+                )}
+              </td>
+            </tr>
+          `,
+        )
+        .join('');
+  }
+
+
+  async function refreshStatus() {
+    const response =
+      await fetch(
+        '/api/status',
+        {
+          cache: 'no-store',
+        },
+      );
+
+    const data =
+      await response.json();
+
+    if (!data.ok) {
+      throw new Error(
+        data.error ||
+        'Status failed.',
+      );
+    }
+
+    $('total').textContent =
+      data.population.totalMcsts
+        .toLocaleString();
+
+    $('checked').textContent =
+      data.results.checkedMcsts
+        .toLocaleString();
+
+    $('withDpo').textContent =
+      data.results.mcstsWithDpo
+        .toLocaleString();
+
+    $('dpoRows').textContent =
+      data.results.dpoRows
+        .toLocaleString();
+
+    $('discrepancies').textContent =
+      data.results.discrepancies
+        .toLocaleString();
+
+    setStatus(
+      `${data.queue.completionPercent}% complete · ` +
+      `${data.queue.pending} pending · ` +
+      `${data.queue.failed} failed`,
+    );
+  }
+
+
+  async function loadRows() {
+    const response =
+      await fetch(
+        '/api/records',
+        {
+          cache: 'no-store',
+        },
+      );
+
+    const data =
+      await response.json();
+
+    if (!data.ok) {
+      throw new Error(
+        data.error ||
+        'Records failed.',
+      );
+    }
+
+    renderRows(data.rows);
+  }
+
+
+  async function getNextLookup() {
+    clearEditor();
+
+    $('nextLookup').disabled = true;
+
+    try {
+      setStatus(
+        'Loading next MCST…',
+      );
+
+      const response =
+        await fetch(
+          '/api/run-batch',
+          {
+            method: 'POST',
+
+            headers: {
+              'content-type':
+                'application/json',
+            },
+
+            body: JSON.stringify({
+              batchSize: 1,
+            }),
+          },
+        );
+
+      const data =
+        await response.json();
+
+      if (!data.ok) {
+        throw new Error(
+          data.error ||
+          'Unable to obtain next MCST.',
+        );
+      }
+
+      if (!data.jobs?.length) {
+        currentJob = null;
+
+        renderCurrentJob();
+
+        setStatus(
+          data.done
+            ? 'All queued MCST lookups are complete.'
+            : 'No pending MCST is currently available.',
+        );
+
+        return;
+      }
+
+      currentJob =
+        data.jobs[0];
+
+      renderCurrentJob();
+
+      setStatus(
+        `Ready for PDPC lookup: MCST ${currentJob.mcstNo}`,
+      );
+    } catch (error) {
+      setStatus(
+        error.message ||
+        String(error),
+      );
+    } finally {
+      $('nextLookup').disabled =
+        false;
+    }
+  }
+
+
+  async function submitResult(
+    payload,
+  ) {
+    if (!currentJob) {
+      return;
+    }
+
+    const response =
+      await fetch(
+        '/api/submit-pdpc-result',
+        {
+          method: 'POST',
+
+          headers: {
+            'content-type':
+              'application/json',
+          },
+
+          body:
+            JSON.stringify({
+              mcstNo:
+                currentJob.mcstNo,
+
+              ...payload,
+            }),
+        },
+      );
+
+    const data =
+      await response.json();
+
+    if (!data.ok) {
+      throw new Error(
+        data.error ||
+        'Unable to save PDPC result.',
+      );
+    }
+
+    return data;
+  }
+
+
+  async function finishAndAdvance(
+    payload,
+  ) {
+    try {
+      setLookupControls(false);
+
+      setStatus(
+        'Saving PDPC result…',
+      );
+
+      await submitResult(payload);
+
+      currentJob = null;
+
+      renderCurrentJob();
+
+      clearEditor();
+
+      await Promise.all([
+        refreshStatus(),
+        loadRows(),
+      ]);
+
+      await getNextLookup();
+    } catch (error) {
+      setStatus(
+        error.message ||
+        String(error),
+      );
+
+      setLookupControls(
+        Boolean(currentJob),
+      );
+    }
+  }
+
+
+  $('sync').onclick =
+    async () => {
+      try {
+        $('sync').disabled = true;
+
+        setStatus(
+          'Synchronising BCA…',
+        );
+
+        const response =
+          await fetch(
+            '/api/sync-bca',
+            {
+              method: 'POST',
+            },
+          );
+
+        const data =
+          await response.json();
+
+        if (!data.ok) {
+          throw new Error(
+            data.error ||
+            'BCA synchronisation failed.',
+          );
+        }
+
+        currentJob = null;
+
+        renderCurrentJob();
+
+        clearEditor();
+
+        await Promise.all([
+          refreshStatus(),
+          loadRows(),
+        ]);
+      } catch (error) {
+        setStatus(
+          error.message ||
+          String(error),
+        );
+      } finally {
+        $('sync').disabled =
+          false;
+      }
+    };
+
+
+  $('retry').onclick =
+    async () => {
+      try {
+        const response =
+          await fetch(
+            '/api/retry-failed',
+            {
+              method: 'POST',
+            },
+          );
+
+        const data =
+          await response.json();
+
+        if (!data.ok) {
+          throw new Error(
+            data.error ||
+            'Retry failed.',
+          );
+        }
+
+        await refreshStatus();
+      } catch (error) {
+        setStatus(
+          error.message ||
+          String(error),
+        );
+      }
+    };
+
+
+  $('nextLookup').onclick =
+    getNextLookup;
+
+
+  $('copyUen').onclick =
+    async () => {
+      if (!currentJob?.uen) {
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(
+          currentJob.uen,
+        );
+
+        setStatus(
+          `Copied UEN ${currentJob.uen}`,
+        );
+      } catch {
+        setStatus(
+          'Unable to copy UEN to clipboard.',
+        );
+      }
+    };
+
+
+  $('found').onclick =
+    () => {
+      if (!currentJob) {
+        return;
+      }
+
+      $('observationRows')
+        .innerHTML = '';
+
+      addObservationRow({
+        uen:
+          currentJob.uen,
+      });
+
+      $('resultEditor')
+        .classList
+        .add('active');
+    };
+
+
+  $('addObservation').onclick =
+    () => {
+      addObservationRow({
+        uen:
+          currentJob?.uen || '',
+      });
+    };
+
+
+  $('cancelFound').onclick =
+    clearEditor;
+
+
+  $('submitFound').onclick =
+    async () => {
+      if (!currentJob) {
+        return;
+      }
+
+      const observations =
+        collectObservations();
+
+      if (!observations.length) {
+        setStatus(
+          'Enter at least one PDPC DPO result.',
+        );
+
+        return;
+      }
+
+      await finishAndAdvance({
+        status: 'found',
+
+        searchType: 'uen',
+
+        searchValue:
+          currentJob.uen,
+
+        observations,
+      });
+    };
+
+
+  $('notFound').onclick =
+    async () => {
+      if (!currentJob) {
+        return;
+      }
+
+      const confirmed =
+        window.confirm(
+          'Confirm that you completed the PDPC Registry search and it returned no registry result for this MCST/UEN.',
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      await finishAndAdvance({
+        status: 'not_found',
+
+        searchType:
+          currentJob.uen
+            ? 'uen'
+            : 'estate_name',
+
+        searchValue:
+          currentJob.uen ||
+          currentJob.estateName,
+      });
+    };
+
+
+  $('verification').onclick =
+    async () => {
+      if (!currentJob) {
+        return;
+      }
+
+      try {
+        await submitResult({
+          status:
+            'verification_required',
+        });
+
+        setStatus(
+          'Verification required. No DPO result was recorded.',
+        );
+      } catch (error) {
+        setStatus(
+          error.message ||
+          String(error),
+        );
+      }
+    };
+
+
+  $('search')
+    .addEventListener(
+      'input',
+      () => {
+        clearTimeout(
+          searchTimer,
+        );
+
+        searchTimer =
+          setTimeout(
+            async () => {
+              const query =
+                $('search')
+                  .value
+                  .trim();
+
+              if (!query) {
+                await loadRows();
+                return;
+              }
+
+              try {
+                const response =
+                  await fetch(
+                    '/api/search?q=' +
+                    encodeURIComponent(
+                      query,
+                    ),
+                  );
+
+                const data =
+                  await response.json();
+
+                if (!data.ok) {
+                  throw new Error(
+                    data.error ||
+                    'Search failed.',
+                  );
+                }
+
+                renderRows(
+                  data.rows,
+                );
+              } catch (error) {
+                setStatus(
+                  error.message ||
+                  String(error),
+                );
+              }
+            },
+            250,
+          );
+      },
+    );
+
+
+  renderCurrentJob();
+
+  Promise.all([
+    refreshStatus(),
+    loadRows(),
+  ]).catch(
+    (error) =>
+      setStatus(
+        error.message ||
+        String(error),
+      ),
+  );
 </script>
+
 </body>
 </html>
