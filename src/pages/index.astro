@@ -1,252 +1,74 @@
 ---
-const title = 'MCST DPO Registry Research';
+export const prerender = false;
 ---
 
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="color-scheme" content="dark" />
-		<meta
-			name="description"
-			content="Singapore MCST DPO Registry research and reconciliation tool"
-		/>
-		<title>{title}</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>MCST DPO Registry Research</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e8edf5;background:#090d14;color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#090d14}.shell{max-width:1500px;margin:auto;padding:32px}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:28px}h1{font-size:28px;margin:0 0 8px}p{margin:0;color:#93a0b5}.actions{display:flex;gap:10px;flex-wrap:wrap}button,a.button{border:1px solid #283244;background:#151c28;color:#edf2fa;border-radius:8px;padding:10px 14px;font-weight:650;text-decoration:none;cursor:pointer}button.primary{background:#edf2fa;color:#0b1018}button:disabled{opacity:.45;cursor:not-allowed}.cards{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:12px;margin-bottom:20px}.card{background:#101620;border:1px solid #222c3b;border-radius:10px;padding:16px}.label{font-size:12px;color:#8290a5;text-transform:uppercase;letter-spacing:.06em}.value{font-size:26px;font-weight:700;margin-top:7px}.panel{background:#101620;border:1px solid #222c3b;border-radius:10px;overflow:hidden}.toolbar{display:flex;gap:12px;align-items:center;padding:14px;border-bottom:1px solid #222c3b}.toolbar input{flex:1;max-width:430px;background:#090d14;border:1px solid #2a3547;color:#fff;border-radius:7px;padding:10px 12px}.status{font-size:13px;color:#9aa7ba;margin-left:auto}.tablewrap{overflow:auto;max-height:65vh}table{border-collapse:collapse;width:100%;min-width:1200px}th,td{text-align:left;padding:11px 12px;border-bottom:1px solid #202938;font-size:13px;vertical-align:top}th{position:sticky;top:0;background:#151c28;color:#9eacc0;font-size:11px;text-transform:uppercase;letter-spacing:.04em}td{color:#dce3ed}.yes{font-weight:700}.warn{color:#f1c66d}.empty{padding:42px;text-align:center;color:#7f8da2}.note{font-size:12px;color:#718096;margin-top:12px}@media(max-width:950px){.top{display:block}.actions{margin-top:18px}.cards{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <div class="top">
+    <div><h1>MCST DPO Registry Research</h1><p>BCA MCST population reconciled against the PDPC DPO Registry using UEN as the primary identity key.</p></div>
+    <div class="actions">
+      <button id="sync" class="primary">Sync MCST Records</button>
+      <button id="run">Run DPO Lookup</button>
+      <button id="stop" disabled>Stop</button>
+      <button id="retry">Retry Failed</button>
+      <a class="button" href="/api/export.xlsx">Export Excel</a>
+    </div>
+  </div>
 
-		<style>
-			:root {
-				font-family:
-					Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-					"Segoe UI", sans-serif;
-				color: #e8edf5;
-				background: #0b0e13;
-			}
+  <section class="cards">
+    <div class="card"><div class="label">MCST population</div><div class="value" id="total">0</div></div>
+    <div class="card"><div class="label">Checked</div><div class="value" id="checked">0</div></div>
+    <div class="card"><div class="label">MCSTs with DPO</div><div class="value" id="withDpo">0</div></div>
+    <div class="card"><div class="label">DPO rows</div><div class="value" id="dpoRows">0</div></div>
+    <div class="card"><div class="label">Discrepancies</div><div class="value" id="discrepancies">0</div></div>
+  </section>
 
-			* {
-				box-sizing: border-box;
-			}
-
-			body {
-				margin: 0;
-				background: #0b0e13;
-				color: #e8edf5;
-			}
-
-			main {
-				max-width: 1500px;
-				margin: 0 auto;
-				padding: 36px 28px 60px;
-			}
-
-			h1 {
-				margin: 0;
-				font-size: 30px;
-				letter-spacing: -0.02em;
-			}
-
-			.sub {
-				color: #9aa6b6;
-				margin: 8px 0 28px;
-			}
-
-			.toolbar {
-				display: flex;
-				gap: 10px;
-				flex-wrap: wrap;
-				align-items: center;
-				margin-bottom: 20px;
-			}
-
-			button,
-			a.button {
-				border: 1px solid #2a3443;
-				background: #151b24;
-				color: #f5f7fa;
-				padding: 10px 14px;
-				border-radius: 9px;
-				font-weight: 650;
-				text-decoration: none;
-				cursor: pointer;
-			}
-
-			button:hover,
-			a.button:hover {
-				background: #1c2531;
-			}
-
-			.primary {
-				background: #f3f6fa;
-				color: #11161d;
-				border-color: #f3f6fa;
-			}
-
-			.primary:hover {
-				background: #dce3eb;
-			}
-
-			.status {
-				color: #aab6c6;
-				min-height: 22px;
-				margin: 8px 0 18px;
-			}
-
-			.stats {
-				display: grid;
-				grid-template-columns: repeat(4, minmax(0, 1fr));
-				gap: 12px;
-				margin: 20px 0;
-			}
-
-			.card {
-				background: #11161d;
-				border: 1px solid #232c38;
-				border-radius: 12px;
-				padding: 16px;
-			}
-
-			.label {
-				color: #8f9aaa;
-				font-size: 12px;
-				text-transform: uppercase;
-				letter-spacing: 0.08em;
-			}
-
-			.value {
-				font-size: 24px;
-				font-weight: 720;
-				margin-top: 6px;
-			}
-
-			.tablewrap {
-				overflow: auto;
-				border: 1px solid #232c38;
-				border-radius: 12px;
-				background: #10151c;
-				max-height: 68vh;
-			}
-
-			table {
-				width: 100%;
-				border-collapse: collapse;
-				min-width: 1120px;
-			}
-
-			th {
-				position: sticky;
-				top: 0;
-				background: #151b24;
-				text-align: left;
-				font-size: 12px;
-				color: #aeb8c5;
-				padding: 11px 12px;
-				border-bottom: 1px solid #2b3542;
-				white-space: nowrap;
-			}
-
-			td {
-				padding: 10px 12px;
-				border-bottom: 1px solid #1e2631;
-				font-size: 13px;
-				vertical-align: top;
-			}
-
-			.muted {
-				color: #758195;
-			}
-
-			.note {
-				margin-top: 16px;
-				color: #7f8b9c;
-				font-size: 12px;
-				line-height: 1.5;
-			}
-
-			@media (max-width: 800px) {
-				.stats {
-					grid-template-columns: repeat(2, 1fr);
-				}
-
-				main {
-					padding: 24px 14px;
-				}
-			}
-		</style>
-	</head>
-
-	<body>
-		<main>
-			<h1>{title}</h1>
-
-			<p class="sub">
-				Singapore MCST master population and PDPC DPO Registry research,
-				reconciliation and Excel export.
-			</p>
-
-			<div class="toolbar">
-				<button disabled>Sync MCST Records</button>
-				<button disabled>Check PDPC Registry</button>
-				<button class="primary" disabled>Run DPO Lookup</button>
-				<button disabled>Stop</button>
-				<button disabled>Export Excel</button>
-			</div>
-
-			<div class="status">
-				Application ready. Data services have not yet been configured.
-			</div>
-
-			<section class="stats">
-				<div class="card">
-					<div class="label">MCST Records</div>
-					<div class="value">0</div>
-				</div>
-
-				<div class="card">
-					<div class="label">DPO Found</div>
-					<div class="value">0</div>
-				</div>
-
-				<div class="card">
-					<div class="label">DPO Not Found</div>
-					<div class="value">0</div>
-				</div>
-
-				<div class="card">
-					<div class="label">Record Discrepancies</div>
-					<div class="value">0</div>
-				</div>
-			</section>
-
-			<div class="tablewrap">
-				<table>
-					<thead>
-						<tr>
-							<th>MCST#</th>
-							<th>Estate Name</th>
-							<th>UEN</th>
-							<th>DPO(Y/N)</th>
-							<th>DPO Name</th>
-							<th>DPO Email</th>
-							<th>DPO Company</th>
-							<th>Record Discrepancy(Y/N)</th>
-						</tr>
-					</thead>
-
-					<tbody>
-						<tr>
-							<td colspan="8" class="muted">
-								No MCST records loaded.
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-
-			<p class="note">
-				Multiple DPOs for the same MCST will be retained as separate rows.
-				Conflicting estate or organisation records will also be retained
-				separately and flagged under Record Discrepancy.
-			</p>
-		</main>
-	</body>
+  <section class="panel">
+    <div class="toolbar">
+      <input id="search" placeholder="Search MCST, estate, UEN, DPO name or email" />
+      <div class="status" id="status">Ready</div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>MCST#</th><th>Estate Name</th><th>UEN</th><th>DPO(Y/N)</th><th>DPO Name</th><th>DPO Email</th><th>DPO Company</th><th>Record Discrepancy(Y/N)</th></tr></thead>
+        <tbody id="rows"><tr><td colspan="8" class="empty">No records loaded.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+  <div class="note">“DPO = N” means no registration was found in the completed PDPC Registry lookup; it does not prove that the MCST has not appointed a DPO elsewhere.</div>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  let running = false;
+  let searchTimer;
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function renderRows(rows){
+    const body=$('rows');
+    if(!rows?.length){body.innerHTML='<tr><td colspan="8" class="empty">No matching records.</td></tr>';return;}
+    body.innerHTML=rows.map(r=>`<tr><td>${esc(r['MCST#'])}</td><td>${esc(r['Estate Name'])}</td><td>${esc(r['UEN'])}</td><td class="yes">${esc(r['DPO(Y/N)'])}</td><td>${esc(r['DPO Name'])}</td><td>${esc(r['DPO Email'])}</td><td>${esc(r['DPO Company'])}</td><td class="${r['Record Discrepancy(Y/N)']==='Y'?'warn':''}">${esc(r['Record Discrepancy(Y/N)'])}</td></tr>`).join('');
+  }
+  async function status(){
+    const r=await fetch('/api/status',{cache:'no-store'}); const d=await r.json(); if(!d.ok) throw new Error(d.error||'Status failed');
+    $('total').textContent=d.population.totalMcsts.toLocaleString(); $('checked').textContent=d.results.checkedMcsts.toLocaleString(); $('withDpo').textContent=d.results.mcstsWithDpo.toLocaleString(); $('dpoRows').textContent=d.results.dpoRows.toLocaleString(); $('discrepancies').textContent=d.results.discrepancies.toLocaleString();
+    $('status').textContent=`${d.queue.completionPercent}% complete · ${d.queue.pending} pending · ${d.queue.failed} failed`;
+  }
+  async function loadRows(){ const r=await fetch('/api/records',{cache:'no-store'}); const d=await r.json(); if(!d.ok) throw new Error(d.error||'Records failed'); renderRows(d.rows); }
+  $('sync').onclick=async()=>{ try{$('sync').disabled=true;$('status').textContent='Synchronising BCA…'; const r=await fetch('/api/sync-bca',{method:'POST'}); const d=await r.json(); if(!d.ok) throw new Error(d.error); await status(); await loadRows();}catch(e){$('status').textContent=e.message||String(e)}finally{$('sync').disabled=false} };
+  $('retry').onclick=async()=>{try{await fetch('/api/retry-failed',{method:'POST'});await status()}catch(e){$('status').textContent=e.message||String(e)}};
+  $('run').onclick=async()=>{running=true;$('run').disabled=true;$('stop').disabled=false;try{while(running){const r=await fetch('/api/run-batch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({batchSize:3})});const d=await r.json();if(!d.ok)throw new Error(d.error);await status();if(d.paused){$('status').textContent=d.message||'PDPC verification required.';break}if(d.done)break;if(!d.processed&&!d.failed?.length)break;}await loadRows()}catch(e){$('status').textContent=e.message||String(e)}finally{running=false;$('run').disabled=false;$('stop').disabled=true}};
+  $('stop').onclick=()=>{running=false;$('status').textContent='Stopping after current batch…'};
+  $('search').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(async()=>{const q=$('search').value.trim();if(!q){await loadRows();return}try{const r=await fetch('/api/search?q='+encodeURIComponent(q));const d=await r.json();if(!d.ok)throw new Error(d.error);renderRows(d.rows)}catch(e){$('status').textContent=e.message||String(e)}},250)});
+  Promise.all([status(),loadRows()]).catch(e=>$('status').textContent=e.message||String(e));
+</script>
+</body>
 </html>
