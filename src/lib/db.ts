@@ -78,25 +78,50 @@ export async function upsertMcstRecords(
 
 
 /*
- * Rebuild the lookup queue from the current BCA snapshot.
+ * Reconcile the lookup queue with the current BCA snapshot.
  *
- * The complete MCST identifier is used as the job key:
+ * Existing jobs are preserved so completed PDPC research is never
+ * reset merely because the BCA source is synchronised again.
+ *
+ * - MCSTs no longer present in BCA are removed from the queue.
+ * - Existing MCST jobs retain their current status and history.
+ * - Newly published MCSTs are added as pending jobs.
+ *
+ * The complete BCA MCST identifier remains the job identity:
  *
  *   4355
  *   01-4355
  *   02-4355
  *
- * therefore become three independent PDPC lookup jobs.
+ * are three independent jobs.
  */
 export async function replaceLookupJobs(
 	db: D1Database
 ) {
+	/*
+	 * Remove queue entries whose MCST identifier no longer exists
+	 * in the current BCA snapshot.
+	 */
 	await db
-		.prepare(
-			`DELETE FROM lookup_jobs`
-		)
+		.prepare(`
+			DELETE FROM lookup_jobs
+			WHERE NOT EXISTS (
+				SELECT 1
+				FROM mcst_records m
+				WHERE
+					m.source = 'BCA'
+					AND m.mcst_no = lookup_jobs.mcst_no
+			)
+		`)
 		.run();
 
+
+	/*
+	 * Add only MCST identifiers that do not already have a queue job.
+	 *
+	 * Existing pending, processing, completed or failed jobs are left
+	 * untouched.
+	 */
 	await db
 		.prepare(`
 			INSERT INTO lookup_jobs(
@@ -104,11 +129,18 @@ export async function replaceLookupJobs(
 				status
 			)
 			SELECT
-				mcst_no,
+				m.mcst_no,
 				'pending'
-			FROM mcst_records
-			WHERE source = 'BCA'
-			GROUP BY mcst_no
+			FROM mcst_records m
+			WHERE
+				m.source = 'BCA'
+				AND NOT EXISTS (
+					SELECT 1
+					FROM lookup_jobs j
+					WHERE j.mcst_no = m.mcst_no
+				)
+			GROUP BY m.mcst_no
+			ORDER BY m.id
 		`)
 		.run();
 }
