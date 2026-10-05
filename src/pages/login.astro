@@ -83,13 +83,18 @@ export const prerender = false;
 				overflow: hidden;
 			}
 
+			/* -------------------------------------------------
+			   CERULIUS BRAND
+			   Compact lockup positioned in open blue-sky area
+			   ------------------------------------------------- */
+
 			.brand {
 				position: absolute;
 
-				left: 22%;
-				top: 24%;
+				left: 25%;
+				top: 21%;
 
-				width: 320px;
+				width: 300px;
 
 				display: flex;
 				flex-direction: column;
@@ -97,15 +102,14 @@ export const prerender = false;
 
 				text-align: center;
 
-				transform:
-					translateX(-50%);
+				transform: translateX(-50%);
 			}
 
 			.brand-mark {
-				width: 78px;
-				height: 78px;
+				width: 70px;
+				height: 70px;
 
-				margin-bottom: 14px;
+				margin-bottom: 7px;
 
 				color: var(--gold);
 			}
@@ -121,13 +125,12 @@ export const prerender = false;
 
 				color: var(--gold-light);
 
-				font-size: 38px;
+				font-size: 36px;
 				line-height: 1;
 
 				font-weight: 650;
 
-				letter-spacing:
-					0.075em;
+				letter-spacing: 0.075em;
 
 				text-shadow:
 					0 2px 16px
@@ -136,44 +139,48 @@ export const prerender = false;
 
 			.brand-description {
 				margin:
-					13px
+					7px
 					0
 					0;
 
 				color: var(--gold);
 
-				font-size: 13px;
+				font-size: 12px;
+				line-height: 1.2;
+
 				font-weight: 500;
 
-				letter-spacing:
-					0.16em;
+				letter-spacing: 0.16em;
 
 				text-shadow:
 					0 2px 12px
 					rgba(0, 0, 0, 0.35);
 			}
 
+			/* -------------------------------------------------
+			   LOGIN CARD
+			   ------------------------------------------------- */
+
 			.login-card {
 				position: absolute;
 
-				right: 8%;
+				right: 9%;
 				top: 50%;
 
-				transform:
-					translateY(-50%);
+				transform: translateY(-50%);
 
-				width: 420px;
+				width: 380px;
 
 				padding:
-					34px
-					36px
-					30px;
+					29px
+					31px
+					25px;
 
 				border:
 					1px solid
 					rgba(31, 148, 255, 0.58);
 
-				border-radius: 20px;
+				border-radius: 18px;
 
 				background:
 					linear-gradient(
@@ -183,17 +190,14 @@ export const prerender = false;
 					);
 
 				box-shadow:
-					0 24px 70px
+					0 22px 60px
 						rgba(0, 0, 0, 0.34),
 					inset
 						0 1px 0
 						rgba(255, 255, 255, 0.035);
 
-				backdrop-filter:
-					blur(16px);
-
-				-webkit-backdrop-filter:
-					blur(16px);
+				backdrop-filter: blur(16px);
+				-webkit-backdrop-filter: blur(16px);
 			}
 
 			.login-heading {
@@ -201,26 +205,25 @@ export const prerender = false;
 
 				text-align: center;
 
-				font-size: 29px;
+				font-size: 26px;
 				line-height: 1.2;
 
 				font-weight: 700;
 
-				letter-spacing:
-					-0.02em;
+				letter-spacing: -0.02em;
 			}
 
 			.login-subtitle {
 				margin:
-					11px
+					9px
 					0
-					27px;
+					22px;
 
 				text-align: center;
 
 				color: #d0daea;
 
-				font-size: 14px;
+				font-size: 12.5px;
 				line-height: 1.5;
 			}
 
@@ -230,11 +233,11 @@ export const prerender = false;
 				margin:
 					0
 					0
-					15px;
+					13px;
 
 				padding:
-					10px
-					12px;
+					9px
+					11px;
 
 				border:
 					1px solid
@@ -247,7 +250,7 @@ export const prerender = false;
 
 				color: #ffc5ca;
 
-				font-size: 12px;
+				font-size: 11.5px;
 				line-height: 1.45;
 			}
 
@@ -256,7 +259,7 @@ export const prerender = false;
 			}
 
 			.form-group {
-				margin-bottom: 14px;
+				margin-bottom: 12px;
 			}
 
 			.input-shell {
@@ -266,14 +269,13 @@ export const prerender = false;
 			.field-icon {
 				position: absolute;
 
-				left: 16px;
+				left: 15px;
 				top: 50%;
 
-				width: 20px;
-				height: 20px;
+				width: 18px;
+				height: 18px;
 
-				transform:
-					translateY(-50%);
+				transform: translateY(-50%);
 
 				color: #abc6eb;
 
@@ -288,7 +290,7 @@ export const prerender = false;
 
 			input {
 				width: 100%;
-				height: 52px;
+				height: 47px;
 
 				border:
 					1px solid
@@ -296,20 +298,18 @@ export const prerender = false;
 
 				border-radius: 8px;
 
-				background:
-					var(--field);
-
+				background: var(--field);
 				color: #ffffff;
 
 				padding:
 					0
-					50px
+					45px
 					0
-					48px;
+					43px;
 
 				outline: none;
 
-				font-size: 13px;
+				font-size: 12.5px;
 
 				transition:
 					border-color 140ms ease,
@@ -330,20 +330,19 @@ export const prerender = false;
 
 				box-shadow:
 					0 0 0 3px
-						rgba(0, 145, 255, 0.11);
+					rgba(0, 145, 255, 0.11);
 			}
 
 			.password-toggle {
 				position: absolute;
 
-				right: 8px;
+				right: 7px;
 				top: 50%;
 
-				width: 38px;
-				height: 38px;
+				width: 35px;
+				height: 35px;
 
-				transform:
-					translateY(-50%);
+				transform: translateY(-50%);
 
 				display: grid;
 				place-items: center;
@@ -369,15 +368,15 @@ export const prerender = false;
 			}
 
 			.password-toggle svg {
-				width: 19px;
-				height: 19px;
+				width: 18px;
+				height: 18px;
 			}
 
 			.sign-in-button {
 				width: 100%;
-				height: 50px;
+				height: 46px;
 
-				margin-top: 6px;
+				margin-top: 5px;
 
 				border: 0;
 				border-radius: 8px;
@@ -391,14 +390,14 @@ export const prerender = false;
 
 				color: #ffffff;
 
-				font-size: 14px;
+				font-size: 13px;
 				font-weight: 700;
 
 				cursor: pointer;
 
 				box-shadow:
-					0 10px 24px
-						rgba(0, 126, 255, 0.18);
+					0 9px 22px
+					rgba(0, 126, 255, 0.18);
 
 				transition:
 					transform 120ms ease,
@@ -407,16 +406,12 @@ export const prerender = false;
 			}
 
 			.sign-in-button:hover:not(:disabled) {
-				filter:
-					brightness(1.08);
-
-				transform:
-					translateY(-1px);
+				filter: brightness(1.08);
+				transform: translateY(-1px);
 			}
 
 			.sign-in-button:active:not(:disabled) {
-				transform:
-					translateY(0);
+				transform: translateY(0);
 			}
 
 			.sign-in-button:disabled {
@@ -426,7 +421,7 @@ export const prerender = false;
 
 			.authorised-note {
 				margin:
-					16px
+					13px
 					0
 					0;
 
@@ -435,20 +430,23 @@ export const prerender = false;
 				color:
 					rgba(190, 204, 222, 0.55);
 
-				font-size: 9px;
+				font-size: 8.5px;
 
-				letter-spacing:
-					0.05em;
+				letter-spacing: 0.05em;
 			}
+
+			/* -------------------------------------------------
+			   RESPONSIVE
+			   ------------------------------------------------- */
 
 			@media (max-width: 1100px) {
 				.brand {
-					left: 25%;
+					left: 24%;
 				}
 
 				.login-card {
 					right: 5%;
-					width: 400px;
+					width: 370px;
 				}
 			}
 
@@ -461,14 +459,13 @@ export const prerender = false;
 					align-items: center;
 					justify-content: center;
 
-					gap: 28px;
+					gap: 24px;
 
 					padding:
-						32px
+						30px
 						20px;
 
-					background-position:
-						center center;
+					background-position: center center;
 
 					overflow: auto;
 				}
@@ -482,26 +479,26 @@ export const prerender = false;
 				}
 
 				.brand-mark {
-					width: 66px;
-					height: 66px;
+					width: 62px;
+					height: 62px;
 
-					margin-bottom: 10px;
+					margin-bottom: 6px;
 				}
 
 				.brand-name {
-					font-size: 31px;
+					font-size: 30px;
 				}
 
 				.brand-description {
-					margin-top: 9px;
+					margin-top: 6px;
 
-					font-size: 11px;
+					font-size: 10.5px;
 				}
 
 				.login-card {
 					position: static;
 
-					width: min(100%, 420px);
+					width: min(100%, 380px);
 
 					transform: none;
 				}
@@ -509,16 +506,16 @@ export const prerender = false;
 
 			@media (max-width: 500px) {
 				.login-page {
-					gap: 22px;
+					gap: 20px;
 
 					padding:
-						24px
+						22px
 						14px;
 				}
 
 				.brand-mark {
-					width: 58px;
-					height: 58px;
+					width: 56px;
+					height: 56px;
 				}
 
 				.brand-name {
@@ -531,21 +528,21 @@ export const prerender = false;
 
 				.login-card {
 					padding:
-						28px
-						22px
-						25px;
+						26px
+						21px
+						23px;
 
-					border-radius: 17px;
+					border-radius: 16px;
 				}
 
 				.login-heading {
-					font-size: 26px;
+					font-size: 24px;
 				}
 
 				.login-subtitle {
-					margin-bottom: 23px;
+					margin-bottom: 20px;
 
-					font-size: 13px;
+					font-size: 12px;
 				}
 			}
 		</style>
@@ -802,26 +799,21 @@ export const prerender = false;
 					'eye-hidden'
 				);
 
-
 			function showMessage(text) {
-				message.textContent =
-					text;
+				message.textContent = text;
 
 				message.classList.add(
 					'visible'
 				);
 			}
 
-
 			function clearMessage() {
-				message.textContent =
-					'';
+				message.textContent = '';
 
 				message.classList.remove(
 					'visible'
 				);
 			}
-
 
 			passwordToggle.addEventListener(
 				'click',
@@ -861,7 +853,6 @@ export const prerender = false;
 				}
 			);
 
-
 			form.addEventListener(
 				'submit',
 				async (event) => {
@@ -870,12 +861,10 @@ export const prerender = false;
 					clearMessage();
 
 					const email =
-						emailInput.value
-							.trim();
+						emailInput.value.trim();
 
 					const password =
 						passwordInput.value;
-
 
 					if (
 						!email ||
@@ -888,13 +877,10 @@ export const prerender = false;
 						return;
 					}
 
-
-					button.disabled =
-						true;
+					button.disabled = true;
 
 					button.textContent =
 						'Signing in...';
-
 
 					try {
 						const response =
@@ -922,14 +908,12 @@ export const prerender = false;
 								}
 							);
 
-
 						const result =
 							await response
 								.json()
 								.catch(
 									() => null
 								);
-
 
 						if (
 							!response.ok ||
@@ -947,7 +931,6 @@ export const prerender = false;
 
 							return;
 						}
-
 
 						window.location.replace(
 							'/'
