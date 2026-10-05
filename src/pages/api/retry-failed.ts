@@ -1,1 +1,43 @@
-import type {APIRoute} from 'astro';export const prerender=false;export const POST:APIRoute=async({locals})=>{try{const db=(locals.runtime.env as any).DB as D1Database;const r=await db.prepare(`UPDATE lookup_jobs SET status='pending',last_error=NULL,started_at=NULL,completed_at=NULL,updated_at=CURRENT_TIMESTAMP WHERE status='failed'`).run();return Response.json({ok:true,retried:r.meta.changes??0});}catch(e){return Response.json({ok:false,error:e instanceof Error?e.message:String(e)},{status:500});}};
+import type { APIRoute } from 'astro';
+
+export const prerender = false;
+
+export const POST: APIRoute = async ({ locals }) => {
+	try {
+		const db =
+			(locals.runtime.env as any).DB as D1Database;
+
+		const r =
+			await db
+				.prepare(`
+					UPDATE lookup_jobs
+					SET
+						status = 'pending',
+						last_error = NULL,
+						started_at = NULL,
+						completed_at = NULL,
+						updated_at = CURRENT_TIMESTAMP
+					WHERE status = 'failed'
+				`)
+				.run();
+
+		return Response.json({
+			ok: true,
+			retried:
+				r.meta.changes ?? 0
+		});
+	} catch (e) {
+		return Response.json(
+			{
+				ok: false,
+				error:
+					e instanceof Error
+						? e.message
+						: String(e)
+			},
+			{
+				status: 500
+			}
+		);
+	}
+};
