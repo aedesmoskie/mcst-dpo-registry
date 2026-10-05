@@ -1,21 +1,10 @@
 {
-	"name": "mcst-dpo-registry",
-	"compatibility_date": "2025-10-08",
-	"compatibility_flags": ["nodejs_compat"],
-	"main": "./dist/_worker.js/index.js",
-	"assets": {
-		"directory": "./dist",
-		"binding": "ASSETS"
-	},
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "mcst-dpo-registry",
-			"database_id": "762dff8b-9496-4dfb-8d84-cf82c3b48372"
-		}
-	],
-	"observability": {
-		"enabled": true
-	},
-	"upload_source_maps": true
+  "name": "mcst-dpo-registry",
+  "compatibility_date": "2025-10-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./dist/_worker.js/index.js",
+  "assets": {"directory":"./dist","binding":"ASSETS"},
+  "d1_databases": [{"binding":"DB","database_name":"mcst-dpo-registry","database_id":"762dff8b-9496-4dfb-8d84-cf82c3b48372"}],
+  "observability": {"enabled": true},
+  "upload_source_maps": true
 }
