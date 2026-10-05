@@ -1,12 +1,19 @@
 /**
- * Conservative text normalisation used for comparison only.
+ * Conservative normalisation and identity reconciliation.
  *
- * IMPORTANT:
- * - Original source values must always be preserved.
- * - Normalised values must never be written over BCA or PDPC source data.
- * - This function is for discrepancy detection, not entity merging.
+ * Identity hierarchy:
+ *
+ * 1. UEN exact match = strongest organisation match.
+ * 2. MCST number = canonical BCA strata-plan identifier.
+ * 3. Entity / estate name = supporting evidence only.
+ *
+ * Source values must always be preserved separately.
  */
-export function normaliseName(value: string | null | undefined): string {
+
+
+export function normaliseName(
+	value: string | null | undefined,
+): string {
 	if (!value) return '';
 
 	return value
@@ -14,25 +21,19 @@ export function normaliseName(value: string | null | undefined): string {
 		.toUpperCase()
 		.replace(/&/g, ' AND ')
 		.replace(/[’'`]/g, '')
+		.replace(/\bNO\.?\s*/g, 'NO ')
 		.replace(/[^A-Z0-9]+/g, ' ')
 		.replace(/\s+/g, ' ')
 		.trim();
 }
 
 
-/**
- * Normalises an MCST number while preserving the meaningful numeric
- * identifier.
- *
- * Examples:
- * "MCST 1000"      -> "1000"
- * "MCST No. 1000"  -> "1000"
- * "1000"           -> "1000"
- */
 export function normaliseMcstNumber(
 	value: string | number | null | undefined,
 ): string {
-	if (value === null || value === undefined) return '';
+	if (value === null || value === undefined) {
+		return '';
+	}
 
 	const raw = String(value).trim();
 
@@ -52,13 +53,9 @@ export function normaliseMcstNumber(
 }
 
 
-/**
- * Conservative UEN normalisation.
- *
- * We remove formatting whitespace/punctuation and uppercase the value.
- * We do not attempt to infer or repair a malformed UEN.
- */
-export function normaliseUen(value: string | null | undefined): string {
+export function normaliseUen(
+	value: string | null | undefined,
+): string {
 	if (!value) return '';
 
 	return value
@@ -68,12 +65,13 @@ export function normaliseUen(value: string | null | undefined): string {
 }
 
 
-/**
- * Determines whether two supplied names are equivalent after conservative
- * formatting normalisation.
- *
- * Empty values are never considered equivalent.
- */
+export function cleanSourceText(
+	value: string | null | undefined,
+): string {
+	return value?.trim() ?? '';
+}
+
+
 export function namesEquivalent(
 	left: string | null | undefined,
 	right: string | null | undefined,
@@ -87,41 +85,221 @@ export function namesEquivalent(
 }
 
 
-/**
- * Returns true when both sources provide an estate/organisation name and
- * those names differ after conservative normalisation.
- *
- * A missing PDPC organisation name is NOT automatically a discrepancy.
- * It simply means there is insufficient evidence for a name comparison.
- */
-export function hasNameDiscrepancy(
-	bcaEstateName: string | null | undefined,
-	pdpcOrganisationName: string | null | undefined,
+export function uensEquivalent(
+	left: string | null | undefined,
+	right: string | null | undefined,
 ): boolean {
-	const bca = normaliseName(bcaEstateName);
-	const pdpc = normaliseName(pdpcOrganisationName);
+	const a = normaliseUen(left);
+	const b = normaliseUen(right);
 
-	if (!bca || !pdpc) return false;
+	if (!a || !b) return false;
 
-	return bca !== pdpc;
+	return a === b;
 }
 
 
 /**
- * Removes surrounding whitespace without otherwise modifying source data.
+ * Attempts to extract an MCST number from a PDPC/BCA organisation name.
+ *
+ * Example:
+ *
+ * "THE MANAGEMENT CORPORATION - STRATA TITLE PLAN NO. 4869"
+ * -> "4869"
  */
-export function cleanSourceText(
+export function extractMcstFromEntityName(
 	value: string | null | undefined,
 ): string {
-	return value?.trim() ?? '';
+	if (!value) return '';
+
+	const match = value.match(
+		/(?:STRATA\s*TITLE\s*PLAN|MCST|STP)(?:\s*(?:NO|NUMBER))?[\s.:#-]*(\d+)/i,
+	);
+
+	if (!match?.[1]) return '';
+
+	return String(Number(match[1]));
+}
+
+
+export type IdentityMatch =
+	| 'uen_match'
+	| 'mcst_match'
+	| 'name_match'
+	| 'insufficient_evidence'
+	| 'conflict';
+
+
+export interface IdentityComparison {
+	match: IdentityMatch;
+
+	discrepancy: boolean;
+
+	reason: string;
 }
 
 
 /**
- * Basic email validation for collected public DPO business-email fields.
+ * Reconciles a BCA MCST record against a PDPC result.
  *
- * It deliberately does not reject uncommon but syntactically valid domains.
+ * IMPORTANT:
+ *
+ * A matching UEN overrides harmless organisation-name differences.
+ *
+ * Example:
+ *
+ * BCA:
+ *   UEN: T24MC0007E
+ *
+ * PDPC:
+ *   UEN: T24MC0007E
+ *   Entity Name:
+ *   THE MANAGEMENT CORPORATION - STRATA TITLE PLAN NO. 4869
+ *
+ * This is the same legal entity even if the BCA development name is
+ * "Riverfront Residences".
  */
+export function compareIdentity(input: {
+	bcaMcstNo?: string | null;
+	bcaUen?: string | null;
+	bcaEstateName?: string | null;
+
+	pdpcUen?: string | null;
+	pdpcEntityName?: string | null;
+}): IdentityComparison {
+	const bcaMcst =
+		normaliseMcstNumber(input.bcaMcstNo);
+
+	const bcaUen =
+		normaliseUen(input.bcaUen);
+
+	const bcaName =
+		normaliseName(input.bcaEstateName);
+
+	const pdpcUen =
+		normaliseUen(input.pdpcUen);
+
+	const pdpcName =
+		normaliseName(input.pdpcEntityName);
+
+	const pdpcMcst =
+		extractMcstFromEntityName(
+			input.pdpcEntityName,
+		);
+
+
+	/*
+	 * Rule 1:
+	 * Both systems provide UEN.
+	 *
+	 * Matching UEN is the strongest identity evidence.
+	 */
+	if (bcaUen && pdpcUen) {
+		if (bcaUen === pdpcUen) {
+			/*
+			 * If PDPC also explicitly identifies another MCST number,
+			 * preserve that as a genuine conflict.
+			 */
+			if (
+				bcaMcst &&
+				pdpcMcst &&
+				bcaMcst !== pdpcMcst
+			) {
+				return {
+					match: 'conflict',
+					discrepancy: true,
+					reason:
+						'UEN matches but PDPC entity name references a different MCST number.',
+				};
+			}
+
+			return {
+				match: 'uen_match',
+				discrepancy: false,
+				reason:
+					'BCA and PDPC UEN match.',
+			};
+		}
+
+		return {
+			match: 'conflict',
+			discrepancy: true,
+			reason:
+				'BCA and PDPC UEN differ.',
+		};
+	}
+
+
+	/*
+	 * Rule 2:
+	 * UEN comparison is unavailable, but PDPC explicitly contains
+	 * an MCST number.
+	 */
+	if (bcaMcst && pdpcMcst) {
+		if (bcaMcst === pdpcMcst) {
+			return {
+				match: 'mcst_match',
+				discrepancy: false,
+				reason:
+					'MCST number matches.',
+			};
+		}
+
+		return {
+			match: 'conflict',
+			discrepancy: true,
+			reason:
+				'PDPC entity name references a different MCST number.',
+		};
+	}
+
+
+	/*
+	 * Rule 3:
+	 * Name matching is only supporting evidence.
+	 */
+	if (
+		bcaName &&
+		pdpcName &&
+		bcaName === pdpcName
+	) {
+		return {
+			match: 'name_match',
+			discrepancy: false,
+			reason:
+				'Entity names match but stronger identifiers were unavailable.',
+		};
+	}
+
+
+	/*
+	 * A different development/entity name alone is NOT sufficient
+	 * evidence of a discrepancy.
+	 *
+	 * BCA may publish the development name while PDPC may publish the
+	 * legal Management Corporation name.
+	 */
+	return {
+		match: 'insufficient_evidence',
+		discrepancy: false,
+		reason:
+			'No conflicting authoritative identifier was found.',
+	};
+}
+
+
+/**
+ * Compatibility helper for existing application code.
+ *
+ * Name differences by themselves no longer create a discrepancy.
+ */
+export function hasNameDiscrepancy(
+	_bcaEstateName: string | null | undefined,
+	_pdpcOrganisationName: string | null | undefined,
+): boolean {
+	return false;
+}
+
+
 export function looksLikeEmail(
 	value: string | null | undefined,
 ): boolean {
