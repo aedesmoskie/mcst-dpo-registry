@@ -1,31 +1,81 @@
-import { replaceLookupJobs, upsertMcstRecords } from './db';
+import {
+	replaceLookupJobs,
+	upsertMcstRecords
+} from './db';
+
 import {
 	cleanSourceText,
-	normaliseMcstNumber,
+	normaliseMcstIdentifier,
 	normaliseUen
 } from './normalise';
-import type { McstRecord, SyncResult } from './types';
 
-const DATASET = 'd_f988c57e16e99ad3a649aa04572efd1c';
+import type {
+	McstRecord,
+	SyncResult
+} from './types';
+
+
+const DATASET =
+	'd_f988c57e16e99ad3a649aa04572efd1c';
 
 const POLL_DOWNLOAD =
 	`https://api-open.data.gov.sg/v1/public/api/datasets/${DATASET}/poll-download`;
 
+
+/*
+ * BCA uses placeholder strings such as NA in fields that are
+ * logically empty.
+ */
+function textValue(
+	value: unknown
+): string {
+	if (
+		value === null ||
+		value === undefined
+	) {
+		return '';
+	}
+
+	const text =
+		String(value).trim();
+
+	if (
+		/^(?:NA|N\/A|NULL|NIL|-)$/i.test(text)
+	) {
+		return '';
+	}
+
+	return text;
+}
+
+
+/*
+ * Resolve a field without depending on exact case, spaces or
+ * punctuation in the XLSX column heading.
+ */
 function value(
 	row: Record<string, unknown>,
 	...names: string[]
 ): unknown {
-	const keys = new Map(
-		Object.keys(row).map((key) => [
-			key.toLowerCase().replace(/[^a-z0-9]/g, ''),
-			key
-		])
-	);
+	const keys =
+		new Map(
+			Object.keys(row).map(
+				(key) => [
+					key
+						.toLowerCase()
+						.replace(/[^a-z0-9]/g, ''),
+					key
+				]
+			)
+		);
 
 	for (const name of names) {
-		const actual = keys.get(
-			name.toLowerCase().replace(/[^a-z0-9]/g, '')
-		);
+		const actual =
+			keys.get(
+				name
+					.toLowerCase()
+					.replace(/[^a-z0-9]/g, '')
+			);
 
 		if (actual !== undefined) {
 			return row[actual];
@@ -35,37 +85,24 @@ function value(
 	return undefined;
 }
 
-function textValue(value: unknown): string {
-	if (value === null || value === undefined) {
-		return '';
-	}
-
-	const text = String(value).trim();
-
-	/*
-	 * The BCA workbook uses placeholder strings in fields that are
-	 * logically empty. They must not be interpreted as actual values.
-	 */
-	if (/^(?:NA|N\/A|NULL|NIL|-)$/i.test(text)) {
-		return '';
-	}
-
-	return text;
-}
 
 export async function syncBcaToDatabase(
 	db: D1Database
 ): Promise<SyncResult> {
+
 	/*
-	 * Ask data.gov.sg for the current download URL for the official
-	 * BCA MCST dataset. The application therefore does not depend on
-	 * a manually downloaded workbook or a fixed XLSX URL.
+	 * Obtain the current official dataset download URL from
+	 * data.gov.sg on every synchronisation.
 	 */
-	const catalogueResponse = await fetch(POLL_DOWNLOAD, {
-		headers: {
-			accept: 'application/json'
-		}
-	});
+	const catalogueResponse =
+		await fetch(
+			POLL_DOWNLOAD,
+			{
+				headers: {
+					accept: 'application/json'
+				}
+			}
+		);
 
 	if (!catalogueResponse.ok) {
 		throw new Error(
@@ -73,19 +110,27 @@ export async function syncBcaToDatabase(
 		);
 	}
 
-	const catalogue: any = await catalogueResponse.json();
+	const catalogue: any =
+		await catalogueResponse.json();
 
-	if (catalogue?.code !== 0 || !catalogue?.data?.url) {
+	if (
+		catalogue?.code !== 0 ||
+		!catalogue?.data?.url
+	) {
 		throw new Error(
 			catalogue?.errMsg ||
-				'BCA/data.gov.sg did not return a dataset download URL.'
+			'BCA/data.gov.sg did not return a dataset download URL.'
 		);
 	}
 
+
 	/*
-	 * Download the latest official workbook.
+	 * Download the latest BCA workbook.
 	 */
-	const downloadResponse = await fetch(catalogue.data.url);
+	const downloadResponse =
+		await fetch(
+			catalogue.data.url
+		);
 
 	if (!downloadResponse.ok) {
 		throw new Error(
@@ -93,14 +138,20 @@ export async function syncBcaToDatabase(
 		);
 	}
 
-	const XLSX = await import('xlsx');
 
-	const workbook = XLSX.read(
-		await downloadResponse.arrayBuffer(),
-		{ type: 'array' }
-	);
+	const XLSX =
+		await import('xlsx');
 
-	const sheetName = workbook.SheetNames[0];
+	const workbook =
+		XLSX.read(
+			await downloadResponse.arrayBuffer(),
+			{
+				type: 'array'
+			}
+		);
+
+	const sheetName =
+		workbook.SheetNames[0];
 
 	if (!sheetName) {
 		throw new Error(
@@ -108,11 +159,17 @@ export async function syncBcaToDatabase(
 		);
 	}
 
+
 	const rows =
-		XLSX.utils.sheet_to_json<Record<string, unknown>>(
+		XLSX.utils.sheet_to_json<
+			Record<string, unknown>
+		>(
 			workbook.Sheets[sheetName],
-			{ defval: '' }
+			{
+				defval: ''
+			}
 		);
+
 
 	if (!rows.length) {
 		throw new Error(
@@ -120,129 +177,180 @@ export async function syncBcaToDatabase(
 		);
 	}
 
+
+	/*
+	 * IMPORTANT:
+	 *
+	 * One ACTIVE BCA source row represents one MCST entity for this
+	 * application.
+	 *
+	 * Main and subsidiary MCSTs are retained independently.
+	 *
+	 * Examples:
+	 *
+	 *   4355
+	 *   01-4355
+	 *   02-4355
+	 *
+	 * remain three distinct records even when two or more happen to
+	 * share the same UEN.
+	 *
+	 * Therefore:
+	 *
+	 * - do NOT filter records because sub_mcno is populated;
+	 * - do NOT deduplicate by UEN;
+	 * - do NOT collapse subsidiary identifiers to their parent number.
+	 */
 	const recordsByMcst =
-		new Map<string, McstRecord>();
+		new Map<
+			string,
+			McstRecord
+		>();
+
 
 	for (const row of rows) {
-		/*
-		 * Ignore records explicitly identified by BCA as inactive.
-		 * A blank status is retained rather than silently discarded.
-		 */
-		const status = textValue(
-			value(
-				row,
-				'ust_status',
-				'status'
-			)
-		).toUpperCase();
 
-		if (status && status !== 'ACTIVE') {
-			continue;
-		}
-
-		/*
-		 * BCA includes subsidiary-management-corporation records in
-		 * the same source workbook.
-		 *
-		 * Crucially, ordinary primary MCST rows may contain "NA" in
-		 * sub_mcno. textValue() converts that placeholder to blank.
-		 *
-		 * Only a genuine subsidiary number causes the row to be
-		 * excluded from the primary MCST lookup population.
-		 */
-		const subMcst = textValue(
-			value(
-				row,
-				'sub_mcno',
-				'submcno'
-			)
-		);
-
-		if (subMcst) {
-			continue;
-		}
-
-		const mcst = normaliseMcstNumber(
+		const status =
 			textValue(
 				value(
 					row,
-					'usr_mcno',
-					'mcst_no',
-					'mcstno'
+					'ust_status',
+					'status'
 				)
-			)
-		);
+			).toUpperCase();
+
+
+		/*
+		 * Current BCA records are expected to be ACTIVE.
+		 *
+		 * Explicitly non-active records are excluded. A blank status
+		 * is not silently discarded.
+		 */
+		if (
+			status &&
+			status !== 'ACTIVE'
+		) {
+			continue;
+		}
+
+
+		/*
+		 * usr_mcno is the canonical unique identifier.
+		 *
+		 * We deliberately preserve its complete structure.
+		 */
+		const mcst =
+			normaliseMcstIdentifier(
+				textValue(
+					value(
+						row,
+						'usr_mcno',
+						'mcst_no',
+						'mcstno'
+					)
+				)
+			);
+
 
 		if (!mcst) {
 			continue;
 		}
 
-		const estate = cleanSourceText(
-			textValue(
-				value(
-					row,
-					'usr_devtname',
-					'estate_name',
-					'development_name',
-					'developmentname'
-				)
-			)
-		);
 
-		const uen = normaliseUen(
-			textValue(
-				value(
-					row,
-					'usr_mcstuen',
-					'uen',
-					'mcst_uen',
-					'mcstuen'
+		const estate =
+			cleanSourceText(
+				textValue(
+					value(
+						row,
+						'usr_devtname',
+						'estate_name',
+						'development_name',
+						'developmentname'
+					)
 				)
-			)
-		);
+			);
+
+
+		const uen =
+			normaliseUen(
+				textValue(
+					value(
+						row,
+						'usr_mcstuen',
+						'uen',
+						'mcst_uen',
+						'mcstuen'
+					)
+				)
+			);
+
 
 		/*
-		 * Primary MCST number is the canonical key for the PDPC
-		 * lookup queue.
+		 * The complete MCST identifier is the map key.
+		 *
+		 * UEN is intentionally NOT used as the key because BCA can
+		 * legitimately contain separate MCST entities sharing a UEN.
 		 */
-		recordsByMcst.set(mcst, {
-			mcst_no: mcst,
-			estate_name: estate,
-			uen,
-			source: 'BCA',
-			source_estate_name: estate
-		});
+		recordsByMcst.set(
+			mcst,
+			{
+				mcst_no: mcst,
+				estate_name: estate,
+				uen,
+				source: 'BCA',
+				source_estate_name: estate
+			}
+		);
 	}
 
+
 	const records =
-		[...recordsByMcst.values()];
+		[
+			...recordsByMcst.values()
+		];
+
 
 	/*
-	 * Safety guard: never delete the existing D1 BCA snapshot if
-	 * upstream retrieval/parsing unexpectedly yields no usable data.
+	 * Safety guard.
+	 *
+	 * Never destroy the existing D1 BCA snapshot if retrieval or
+	 * parsing unexpectedly yields no usable records.
 	 */
 	if (!records.length) {
 		throw new Error(
-			'BCA synchronisation returned zero valid primary MCST records; existing data was left unchanged.'
+			'BCA synchronisation returned zero valid ACTIVE MCST records; existing data was left unchanged.'
 		);
 	}
 
+
 	/*
-	 * Replace the BCA snapshot only after the new source has been
-	 * downloaded, parsed and validated successfully.
+	 * Replace the BCA snapshot only after the complete new dataset
+	 * has been downloaded and parsed successfully.
 	 */
 	await db
 		.prepare(
-			`DELETE FROM mcst_records WHERE source='BCA'`
+			`DELETE FROM mcst_records
+			 WHERE source='BCA'`
 		)
 		.run();
+
 
 	await upsertMcstRecords(
 		db,
 		records
 	);
 
-	await replaceLookupJobs(db);
+
+	/*
+	 * Rebuild the PDPC lookup queue using the complete MCST identifier.
+	 *
+	 * The db.ts replacement supplied next will preserve identifiers
+	 * such as 01-4355 and 02-4355 as independent jobs.
+	 */
+	await replaceLookupJobs(
+		db
+	);
+
 
 	return {
 		ok: true,
