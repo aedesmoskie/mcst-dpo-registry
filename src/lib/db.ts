@@ -660,6 +660,18 @@ export async function saveDpoObservations(
 
 /*
  * Exact export schema required by the project.
+ *
+ * BCA is the canonical MCST population.
+ *
+ * Every BCA MCST is exported even when no PDPC lookup result
+ * has yet been recorded. Multiple DPO records for the same
+ * MCST remain separate export rows.
+ *
+ * DPO(Y/N) semantics:
+ *
+ * - Y     = a stored lookup result found a DPO registration
+ * - N     = a stored completed lookup result found no DPO registration
+ * - blank = no stored DPO lookup result exists for this MCST
  */
 export async function getOutputRows(
 	db: D1Database
@@ -668,36 +680,89 @@ export async function getOutputRows(
 		await db
 			.prepare(`
 				SELECT
-					mcst_no,
-					estate_name,
-					uen,
-					dpo_found,
-					dpo_name,
-					dpo_email,
-					dpo_company,
-					record_discrepancy
-				FROM dpo_records
+					m.mcst_no,
+					m.estate_name,
+					m.uen,
+
+					CASE
+						WHEN d.id IS NULL
+							THEN NULL
+						ELSE d.dpo_found
+					END AS dpo_found,
+
+					CASE
+						WHEN d.id IS NULL
+							THEN ''
+						ELSE COALESCE(
+							d.dpo_name,
+							''
+						)
+					END AS dpo_name,
+
+					CASE
+						WHEN d.id IS NULL
+							THEN ''
+						ELSE COALESCE(
+							d.dpo_email,
+							''
+						)
+					END AS dpo_email,
+
+					CASE
+						WHEN d.id IS NULL
+							THEN ''
+						ELSE COALESCE(
+							d.dpo_company,
+							''
+						)
+					END AS dpo_company,
+
+					CASE
+						WHEN d.id IS NULL
+							THEN NULL
+						ELSE d.record_discrepancy
+					END AS record_discrepancy
+
+				FROM mcst_records m
+
+				LEFT JOIN dpo_records d
+					ON d.mcst_no = m.mcst_no
+
+				WHERE
+					m.source = 'BCA'
+
 				ORDER BY
 					CASE
-						WHEN instr(mcst_no, '-') > 0
+						WHEN instr(
+							m.mcst_no,
+							'-'
+						) > 0
 						THEN CAST(
 							substr(
-								mcst_no,
-								instr(mcst_no, '-') + 1
+								m.mcst_no,
+								instr(
+									m.mcst_no,
+									'-'
+								) + 1
 							)
 							AS INTEGER
 						)
 						ELSE CAST(
-							mcst_no AS INTEGER
+							m.mcst_no AS INTEGER
 						)
 					END,
+
 					CASE
-						WHEN instr(mcst_no, '-') = 0
-						THEN 0
-						ELSE 1
+						WHEN instr(
+							m.mcst_no,
+							'-'
+						) = 0
+							THEN 0
+							ELSE 1
 					END,
-					mcst_no,
-					id
+
+					m.mcst_no,
+					d.id
 			`)
 			.all<any>();
 
@@ -716,9 +781,12 @@ export async function getOutputRows(
 				row.uen ?? '',
 
 			'DPO(Y/N)':
-				row.dpo_found
-					? 'Y'
-					: 'N',
+				row.dpo_found === null ||
+				row.dpo_found === undefined
+					? ''
+					: row.dpo_found
+						? 'Y'
+						: 'N',
 
 			'DPO Name':
 				row.dpo_name ?? '',
@@ -730,9 +798,12 @@ export async function getOutputRows(
 				row.dpo_company ?? '',
 
 			'Record Discrepancy(Y/N)':
-				row.record_discrepancy
-					? 'Y'
-					: 'N'
+				row.record_discrepancy === null ||
+				row.record_discrepancy === undefined
+					? ''
+					: row.record_discrepancy
+						? 'Y'
+						: 'N'
 		})
 	);
 }
