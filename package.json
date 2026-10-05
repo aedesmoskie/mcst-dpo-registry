@@ -1,6 +1,6 @@
 {
 	"name": "mcst-dpo-registry",
-	"description": "Build a personal website, blog, or portfolio with Astro.",
+	"description": "Singapore MCST DPO Registry research and reconciliation application.",
 	"cloudflare": {
 		"label": "Astro Framework Starter",
 		"products": [
@@ -17,7 +17,8 @@
 		"@astrojs/rss": "4.0.14",
 		"@astrojs/sitemap": "3.6.1",
 		"astro": "5.16.9",
-		"typescript": "5.9.3"
+		"typescript": "5.9.3",
+		"xlsx": "0.18.5"
 	},
 	"devDependencies": {
 		"wrangler": "4.136.1"
