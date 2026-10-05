@@ -41,9 +41,6 @@ export const prerender = false;
 				--text: #f5f8fc;
 				--muted: #bdcbe0;
 
-				--panel:
-					rgba(7, 25, 46, 0.86);
-
 				--field:
 					rgba(13, 37, 63, 0.68);
 
@@ -86,9 +83,9 @@ export const prerender = false;
 				background:
 					linear-gradient(
 						90deg,
-						rgba(3, 20, 39, 0.28) 0%,
-						rgba(3, 20, 39, 0.08) 45%,
-						rgba(3, 20, 39, 0.18) 100%
+						rgba(3, 20, 39, 0.24) 0%,
+						rgba(3, 20, 39, 0.06) 48%,
+						rgba(3, 20, 39, 0.16) 100%
 					),
 					url("/cerulius-login-bg.png")
 						center center /
@@ -108,34 +105,30 @@ export const prerender = false;
 				background:
 					linear-gradient(
 						180deg,
-						rgba(0, 17, 36, 0.04),
-						rgba(0, 11, 24, 0.16)
+						rgba(0, 17, 36, 0.03),
+						rgba(0, 11, 24, 0.13)
 					);
 			}
 
 			.page-content {
 				width: min(
-					1440px,
-					calc(100% - 96px)
+					1180px,
+					calc(100% - 80px)
 				);
 
 				margin: 0 auto;
 
 				display: grid;
 				grid-template-columns:
-					minmax(360px, 0.9fr)
-					minmax(470px, 0.95fr);
+					1fr
+					500px;
 
 				align-items: center;
 
-				gap: clamp(
-					70px,
-					9vw,
-					170px
-				);
+				gap: 110px;
 
 				padding:
-					64px
+					48px
 					0;
 			}
 
@@ -144,17 +137,17 @@ export const prerender = false;
 				flex-direction: column;
 				align-items: center;
 
-				transform:
-					translateY(-24px);
-
 				text-align: center;
+
+				transform:
+					translateY(-8px);
 			}
 
 			.brand-mark {
-				width: 122px;
-				height: 122px;
+				width: 90px;
+				height: 90px;
 
-				margin-bottom: 18px;
+				margin-bottom: 16px;
 
 				color: var(--gold);
 			}
@@ -170,13 +163,7 @@ export const prerender = false;
 
 				color: var(--gold-light);
 
-				font-size:
-					clamp(
-						42px,
-						4.1vw,
-						64px
-					);
-
+				font-size: 46px;
 				line-height: 1;
 
 				font-weight: 650;
@@ -196,23 +183,17 @@ export const prerender = false;
 
 			.brand-description {
 				margin:
-					18px
+					15px
 					0
 					0;
 
 				color: var(--gold);
 
-				font-size:
-					clamp(
-						17px,
-						1.45vw,
-						22px
-					);
-
+				font-size: 16px;
 				font-weight: 500;
 
 				letter-spacing:
-					0.18em;
+					0.16em;
 
 				text-shadow:
 					0 2px 14px
@@ -225,15 +206,15 @@ export const prerender = false;
 			}
 
 			.login-card {
-				width: 100%;
-				max-width: 570px;
+				width: 500px;
+				max-width: 100%;
 
 				justify-self: end;
 
 				padding:
-					48px
-					52px
-					50px;
+					38px
+					42px
+					40px;
 
 				border:
 					1px solid
@@ -244,7 +225,7 @@ export const prerender = false;
 						0.62
 					);
 
-				border-radius: 28px;
+				border-radius: 22px;
 
 				background:
 					linear-gradient(
@@ -264,12 +245,12 @@ export const prerender = false;
 					);
 
 				box-shadow:
-					0 30px 90px
+					0 24px 70px
 						rgba(
 							0,
 							0,
 							0,
-							0.38
+							0.36
 						),
 					inset
 						0 1px 0
@@ -292,7 +273,7 @@ export const prerender = false;
 
 				text-align: center;
 
-				font-size: 36px;
+				font-size: 31px;
 				line-height: 1.2;
 
 				font-weight: 700;
@@ -303,15 +284,15 @@ export const prerender = false;
 
 			.login-subtitle {
 				margin:
-					16px
+					13px
 					0
-					38px;
+					30px;
 
 				text-align: center;
 
 				color: #d0daea;
 
-				font-size: 16px;
+				font-size: 15px;
 				line-height: 1.5;
 			}
 
@@ -321,11 +302,11 @@ export const prerender = false;
 				margin:
 					0
 					0
-					20px;
+					18px;
 
 				padding:
-					12px
-					14px;
+					11px
+					13px;
 
 				border:
 					1px solid
@@ -336,7 +317,7 @@ export const prerender = false;
 						0.45
 					);
 
-				border-radius: 10px;
+				border-radius: 9px;
 
 				background:
 					rgba(
@@ -357,7 +338,7 @@ export const prerender = false;
 			}
 
 			.form-group {
-				margin-bottom: 18px;
+				margin-bottom: 16px;
 			}
 
 			.input-shell {
@@ -367,11 +348,11 @@ export const prerender = false;
 			.field-icon {
 				position: absolute;
 
-				left: 19px;
+				left: 18px;
 				top: 50%;
 
-				width: 24px;
-				height: 24px;
+				width: 22px;
+				height: 22px;
 
 				transform:
 					translateY(-50%);
@@ -389,13 +370,13 @@ export const prerender = false;
 
 			input {
 				width: 100%;
-				height: 66px;
+				height: 58px;
 
 				border:
 					1px solid
 					var(--border);
 
-				border-radius: 10px;
+				border-radius: 9px;
 
 				background:
 					var(--field);
@@ -404,13 +385,13 @@ export const prerender = false;
 
 				padding:
 					0
-					56px
+					54px
 					0
-					58px;
+					54px;
 
 				outline: none;
 
-				font-size: 15px;
+				font-size: 14px;
 
 				transition:
 					border-color
@@ -455,11 +436,11 @@ export const prerender = false;
 			.password-toggle {
 				position: absolute;
 
-				right: 13px;
+				right: 10px;
 				top: 50%;
 
-				width: 42px;
-				height: 42px;
+				width: 40px;
+				height: 40px;
 
 				margin: 0;
 
@@ -494,15 +475,15 @@ export const prerender = false;
 			}
 
 			.password-toggle svg {
-				width: 23px;
-				height: 23px;
+				width: 21px;
+				height: 21px;
 			}
 
 			.sign-in-button {
 				width: 100%;
-				height: 64px;
+				height: 56px;
 
-				margin-top: 9px;
+				margin-top: 7px;
 
 				border: 0;
 				border-radius: 9px;
@@ -516,18 +497,18 @@ export const prerender = false;
 
 				color: #ffffff;
 
-				font-size: 16px;
+				font-size: 15px;
 				font-weight: 700;
 
 				cursor: pointer;
 
 				box-shadow:
-					0 12px 30px
+					0 10px 26px
 						rgba(
 							0,
 							126,
 							255,
-							0.19
+							0.18
 						);
 
 				transition:
@@ -563,7 +544,7 @@ export const prerender = false;
 
 			.authorised-note {
 				margin:
-					22px
+					18px
 					0
 					0;
 
@@ -574,10 +555,11 @@ export const prerender = false;
 						190,
 						204,
 						222,
-						0.65
+						0.58
 					);
 
-				font-size: 11px;
+				font-size: 10px;
+
 				letter-spacing:
 					0.05em;
 			}
@@ -585,9 +567,14 @@ export const prerender = false;
 			@media (
 				max-width: 1000px
 			) {
+				.login-page {
+					align-items:
+						flex-start;
+				}
+
 				.page-content {
 					width: min(
-						720px,
+						560px,
 						calc(
 							100% - 40px
 						)
@@ -596,10 +583,10 @@ export const prerender = false;
 					grid-template-columns:
 						1fr;
 
-					gap: 38px;
+					gap: 30px;
 
 					padding:
-						48px
+						44px
 						0;
 				}
 
@@ -608,22 +595,26 @@ export const prerender = false;
 				}
 
 				.brand-mark {
-					width: 86px;
-					height: 86px;
-					margin-bottom: 12px;
+					width: 76px;
+					height: 76px;
+
+					margin-bottom: 11px;
 				}
 
 				.brand-name {
-					font-size: 42px;
+					font-size: 38px;
 				}
 
 				.brand-description {
-					margin-top: 12px;
-					font-size: 15px;
+					margin-top: 11px;
+
+					font-size: 14px;
 				}
 
 				.login-card {
-					max-width: 540px;
+					width: 500px;
+					max-width: 100%;
+
 					justify-self: center;
 				}
 			}
@@ -642,52 +633,67 @@ export const prerender = false;
 							100% - 28px
 						);
 
-					gap: 28px;
+					gap: 24px;
 
 					padding:
-						30px
+						28px
 						0;
 				}
 
 				.brand-mark {
-					width: 72px;
-					height: 72px;
+					width: 64px;
+					height: 64px;
+
+					margin-bottom: 10px;
 				}
 
 				.brand-name {
-					font-size: 32px;
+					font-size: 30px;
 				}
 
 				.brand-description {
-					font-size: 12px;
+					margin-top: 9px;
+
+					font-size: 11px;
+
 					letter-spacing:
-						0.15em;
+						0.14em;
 				}
 
 				.login-card {
-					padding:
-						34px
-						22px
-						32px;
+					width: 100%;
 
-					border-radius: 20px;
+					padding:
+						30px
+						22px
+						28px;
+
+					border-radius: 18px;
 				}
 
 				.login-heading {
-					font-size: 29px;
+					font-size: 27px;
 				}
 
 				.login-subtitle {
-					margin-bottom: 28px;
+					margin:
+						11px
+						0
+						25px;
+
 					font-size: 14px;
 				}
 
 				input {
-					height: 58px;
+					height: 56px;
 				}
 
 				.sign-in-button {
-					height: 58px;
+					height: 54px;
+				}
+
+				.authorised-note {
+					margin-top: 16px;
 				}
 			}
 		</style>
