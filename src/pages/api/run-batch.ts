@@ -1,1 +1,96 @@
-import type {APIRoute} from 'astro';import {getLookupProgress,getNextLookupJobs} from '../../lib/db';export const prerender=false;const URL='https://www.pdpc.gov.sg/individuals/e-services/data-protection-officers-dpo-registry';export const POST:APIRoute=async({request,locals})=>{try{const db=(locals.runtime.env as any).DB as D1Database;let n=1;try{const b:any=await request.json();if(Number.isFinite(b.batchSize))n=Math.max(1,Math.min(10,Math.floor(b.batchSize)));}catch{}const jobs=await getNextLookupJobs(db,n),p=await getLookupProgress(db);const done=p.total>0&&p.pending===0&&p.processing===0&&p.failed===0&&p.completed===p.total;return Response.json({ok:true,jobs:jobs.map(j=>({mcstNo:j.mcst_no,uen:j.uen??'',estateName:j.estate_name??'',source:j.source,pdpcRegistryUrl:URL})),done:jobs.length?false:done,progress:p});}catch(e){return Response.json({ok:false,error:e instanceof Error?e.message:String(e)},{status:500});}};
+import type { APIRoute } from 'astro';
+
+import {
+	getLookupProgress,
+	getNextLookupJobs
+} from '../../lib/db';
+
+export const prerender = false;
+
+const URL =
+	'https://www.pdpc.gov.sg/individuals/e-services/data-protection-officers-dpo-registry';
+
+export const POST: APIRoute = async ({ request, locals }) => {
+	try {
+		const db =
+			(locals.runtime.env as any).DB as D1Database;
+
+		let n = 1;
+
+		try {
+			const b: any =
+				await request.json();
+
+			if (Number.isFinite(b.batchSize)) {
+				n =
+					Math.max(
+						1,
+						Math.min(
+							10,
+							Math.floor(b.batchSize)
+						)
+					);
+			}
+		} catch {}
+
+		const jobs =
+			await getNextLookupJobs(
+				db,
+				n
+			);
+
+		const p =
+			await getLookupProgress(db);
+
+		const done =
+			p.total > 0 &&
+			p.pending === 0 &&
+			p.processing === 0 &&
+			p.failed === 0 &&
+			p.completed === p.total;
+
+		return Response.json({
+			ok: true,
+
+			jobs:
+				jobs.map(
+					(j) => ({
+						mcstNo:
+							j.mcst_no,
+
+						uen:
+							j.uen ?? '',
+
+						estateName:
+							j.estate_name ?? '',
+
+						source:
+							j.source,
+
+						pdpcRegistryUrl:
+							URL
+					})
+				),
+
+			done:
+				jobs.length
+					? false
+					: done,
+
+			progress: p
+		});
+	} catch (e) {
+		return Response.json(
+			{
+				ok: false,
+				error:
+					e instanceof Error
+						? e.message
+						: String(e)
+			},
+			{
+				status: 500
+			}
+		);
+	}
+};
