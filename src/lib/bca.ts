@@ -20,32 +20,13 @@ const DATASET =
 const POLL_DOWNLOAD =
 	`https://api-open.data.gov.sg/v1/public/api/datasets/${DATASET}/poll-download`;
 
-
-/*
- * The current authoritative BCA population is approximately 3,818
- * ACTIVE MCST records.
- *
- * Do not allow an unexpectedly small source dataset to replace the
- * existing registry population.
- *
- * This is deliberately below the current population so legitimate
- * future changes do not require an exact-count code change.
- */
 const MIN_EXPECTED_ACTIVE_RECORDS =
 	3500;
 
-
-/*
- * Keep D1 operations comfortably below statement/bind limits.
- */
 const BATCH_SIZE =
 	50;
 
 
-/*
- * BCA uses placeholder strings such as NA in fields that are
- * logically empty.
- */
 function textValue(
 	value: unknown
 ): string {
@@ -69,10 +50,6 @@ function textValue(
 }
 
 
-/*
- * Resolve a field without depending on exact case, spaces or
- * punctuation in the XLSX column heading.
- */
 function value(
 	row: Record<string, unknown>,
 	...names: string[]
@@ -129,491 +106,608 @@ type ExistingMcstRecord = {
 };
 
 
+type SyncHistoryRow = {
+	id: number;
+};
+
+
+async function createSyncHistory(
+	db: D1Database
+): Promise<number> {
+	const startedAt =
+		new Date().toISOString();
+
+	const result =
+		await db
+			.prepare(`
+				INSERT INTO sync_history (
+					source,
+					status,
+					started_at
+				)
+				VALUES (
+					'BCA',
+					'running',
+					?
+				)
+				RETURNING id
+			`)
+			.bind(startedAt)
+			.first<SyncHistoryRow>();
+
+	if (!result?.id) {
+		throw new Error(
+			'Unable to create BCA sync history record.'
+		);
+	}
+
+	return Number(result.id);
+}
+
+
+async function completeSyncHistory(
+	db: D1Database,
+	id: number,
+	populationCount: number,
+	insertedCount: number,
+	updatedCount: number,
+	removedCount: number
+): Promise<void> {
+	await db
+		.prepare(`
+			UPDATE sync_history
+			SET
+				status = 'completed',
+				population_count = ?,
+				inserted_count = ?,
+				updated_count = ?,
+				removed_count = ?,
+				completed_at = ?
+			WHERE id = ?
+		`)
+		.bind(
+			populationCount,
+			insertedCount,
+			updatedCount,
+			removedCount,
+			new Date().toISOString(),
+			id
+		)
+		.run();
+}
+
+
+async function failSyncHistory(
+	db: D1Database,
+	id: number,
+	error: unknown
+): Promise<void> {
+	const message =
+		error instanceof Error
+			? error.message
+			: String(error);
+
+	try {
+		await db
+			.prepare(`
+				UPDATE sync_history
+				SET
+					status = 'failed',
+					error_message = ?,
+					completed_at = ?
+				WHERE id = ?
+			`)
+			.bind(
+				message.slice(0, 2000),
+				new Date().toISOString(),
+				id
+			)
+			.run();
+	} catch {
+		/*
+		 * Preserve the original synchronisation error.
+		 * Failure to write diagnostic history must not mask it.
+		 */
+	}
+}
+
+
 export async function syncBcaToDatabase(
 	db: D1Database
 ): Promise<SyncResult> {
 
-	/*
-	 * Obtain the current official dataset download URL from
-	 * data.gov.sg on every user-requested synchronisation.
-	 */
-	const catalogueResponse =
-		await fetch(
-			POLL_DOWNLOAD,
-			{
-				headers: {
-					accept:
-						'application/json'
+	const syncHistoryId =
+		await createSyncHistory(db);
+
+	try {
+
+		/*
+		 * Obtain the current official dataset URL.
+		 */
+		const catalogueResponse =
+			await fetch(
+				POLL_DOWNLOAD,
+				{
+					headers: {
+						accept:
+							'application/json'
+					}
 				}
-			}
-		);
+			);
 
-	if (!catalogueResponse.ok) {
-		throw new Error(
-			`BCA/data.gov.sg catalogue request failed (${catalogueResponse.status}).`
-		);
-	}
+		if (!catalogueResponse.ok) {
+			throw new Error(
+				`BCA/data.gov.sg catalogue request failed (${catalogueResponse.status}).`
+			);
+		}
 
-	const catalogue: any =
-		await catalogueResponse.json();
-
-	if (
-		catalogue?.code !== 0 ||
-		!catalogue?.data?.url
-	) {
-		throw new Error(
-			catalogue?.errMsg ||
-			'BCA/data.gov.sg did not return a dataset download URL.'
-		);
-	}
-
-
-	/*
-	 * Download the latest BCA workbook.
-	 */
-	const downloadResponse =
-		await fetch(
-			catalogue.data.url
-		);
-
-	if (!downloadResponse.ok) {
-		throw new Error(
-			`BCA/data.gov.sg dataset download failed (${downloadResponse.status}).`
-		);
-	}
-
-
-	const XLSX =
-		await import('xlsx');
-
-	const workbook =
-		XLSX.read(
-			await downloadResponse.arrayBuffer(),
-			{
-				type: 'array'
-			}
-		);
-
-	const sheetName =
-		workbook.SheetNames[0];
-
-	if (!sheetName) {
-		throw new Error(
-			'BCA dataset contains no worksheet.'
-		);
-	}
-
-
-	const rows =
-		XLSX.utils.sheet_to_json<
-			Record<string, unknown>
-		>(
-			workbook.Sheets[sheetName],
-			{
-				defval: ''
-			}
-		);
-
-
-	if (!rows.length) {
-		throw new Error(
-			'BCA synchronisation returned zero source rows; existing data was left unchanged.'
-		);
-	}
-
-
-	/*
-	 * One ACTIVE BCA source row represents one MCST entity.
-	 *
-	 * Main and subsidiary MCSTs remain independent:
-	 *
-	 *   4355
-	 *   01-4355
-	 *   02-4355
-	 *
-	 * UEN is NOT an identity key.
-	 */
-	const recordsByMcst =
-		new Map<
-			string,
-			McstRecord
-		>();
-
-
-	for (const row of rows) {
-
-		const status =
-			textValue(
-				value(
-					row,
-					'ust_status',
-					'status'
-				)
-			).toUpperCase();
-
+		const catalogue: any =
+			await catalogueResponse.json();
 
 		if (
-			status &&
-			status !== 'ACTIVE'
+			catalogue?.code !== 0 ||
+			!catalogue?.data?.url
 		) {
-			continue;
+			throw new Error(
+				catalogue?.errMsg ||
+				'BCA/data.gov.sg did not return a dataset download URL.'
+			);
 		}
 
 
-		const mcst =
-			normaliseMcstIdentifier(
-				textValue(
-					value(
-						row,
-						'usr_mcno',
-						'mcst_no',
-						'mcstno'
-					)
-				)
+		/*
+		 * Download the latest workbook.
+		 */
+		const downloadResponse =
+			await fetch(
+				catalogue.data.url
 			);
 
-
-		if (!mcst) {
-			continue;
+		if (!downloadResponse.ok) {
+			throw new Error(
+				`BCA/data.gov.sg dataset download failed (${downloadResponse.status}).`
+			);
 		}
 
 
-		const estate =
-			cleanSourceText(
-				textValue(
-					value(
-						row,
-						'usr_devtname',
-						'estate_name',
-						'development_name',
-						'developmentname'
-					)
-				)
+		const XLSX =
+			await import('xlsx');
+
+		const workbook =
+			XLSX.read(
+				await downloadResponse
+					.arrayBuffer(),
+				{
+					type: 'array'
+				}
+			);
+
+		const sheetName =
+			workbook.SheetNames[0];
+
+		if (!sheetName) {
+			throw new Error(
+				'BCA dataset contains no worksheet.'
+			);
+		}
+
+
+		const rows =
+			XLSX.utils.sheet_to_json<
+				Record<string, unknown>
+			>(
+				workbook.Sheets[
+					sheetName
+				],
+				{
+					defval: ''
+				}
 			);
 
 
-		const uen =
-			normaliseUen(
+		if (!rows.length) {
+			throw new Error(
+				'BCA synchronisation returned zero source rows; existing data was left unchanged.'
+			);
+		}
+
+
+		/*
+		 * Canonical identity is the complete BCA MCST
+		 * identifier. UEN is not an identity key.
+		 */
+		const recordsByMcst =
+			new Map<
+				string,
+				McstRecord
+			>();
+
+
+		for (const row of rows) {
+
+			const status =
 				textValue(
 					value(
 						row,
-						'usr_mcstuen',
-						'uen',
-						'mcst_uen',
-						'mcstuen'
+						'ust_status',
+						'status'
 					)
-				)
-			);
+				).toUpperCase();
 
 
-		recordsByMcst.set(
-			mcst,
-			{
-				mcst_no: mcst,
-				estate_name: estate,
-				uen,
-				source: 'BCA',
-				source_estate_name:
-					estate
+			if (
+				status &&
+				status !== 'ACTIVE'
+			) {
+				continue;
 			}
-		);
-	}
 
 
-	const records =
-		[
-			...recordsByMcst.values()
-		];
+			const mcst =
+				normaliseMcstIdentifier(
+					textValue(
+						value(
+							row,
+							'usr_mcno',
+							'mcst_no',
+							'mcstno'
+						)
+					)
+				);
 
 
-	/*
-	 * Source integrity guard.
-	 *
-	 * A malformed or unexpectedly incomplete BCA workbook must
-	 * never be allowed to destroy the current registry snapshot.
-	 */
-	if (
-		records.length <
-		MIN_EXPECTED_ACTIVE_RECORDS
-	) {
-		throw new Error(
-			`BCA synchronisation produced only ${records.length} valid ACTIVE MCST records. Expected at least ${MIN_EXPECTED_ACTIVE_RECORDS}. Existing data was left unchanged.`
-		);
-	}
+			if (!mcst) {
+				continue;
+			}
 
 
-	/*
-	 * Load the existing BCA snapshot.
-	 *
-	 * This is a read-only comparison. No database mutation has
-	 * occurred at this point.
-	 */
-	const existingResult =
-		await db
-			.prepare(`
-				SELECT
-					id,
-					mcst_no,
-					estate_name,
+			const estate =
+				cleanSourceText(
+					textValue(
+						value(
+							row,
+							'usr_devtname',
+							'estate_name',
+							'development_name',
+							'developmentname'
+						)
+					)
+				);
+
+
+			const uen =
+				normaliseUen(
+					textValue(
+						value(
+							row,
+							'usr_mcstuen',
+							'uen',
+							'mcst_uen',
+							'mcstuen'
+						)
+					)
+				);
+
+
+			recordsByMcst.set(
+				mcst,
+				{
+					mcst_no:
+						mcst,
+					estate_name:
+						estate,
 					uen,
-					source_estate_name
-				FROM mcst_records
-				WHERE source = 'BCA'
-			`)
-			.all<ExistingMcstRecord>();
-
-
-	const existingByMcst =
-		new Map<
-			string,
-			ExistingMcstRecord
-		>();
-
-
-	for (
-		const row
-		of existingResult.results ?? []
-	) {
-		existingByMcst.set(
-			row.mcst_no,
-			row
-		);
-	}
-
-
-	const inserts:
-		McstRecord[] = [];
-
-	const updates: {
-		id: number;
-		record: McstRecord;
-	}[] = [];
-
-	const removals:
-		ExistingMcstRecord[] = [];
-
-
-	/*
-	 * Compare the new authoritative snapshot against D1.
-	 *
-	 * Unchanged records generate no write.
-	 */
-	for (const record of records) {
-
-		const existing =
-			existingByMcst.get(
-				record.mcst_no
+					source:
+						'BCA',
+					source_estate_name:
+						estate
+				}
 			);
-
-		if (!existing) {
-			inserts.push(record);
-			continue;
 		}
 
 
-		const changed =
-			!sameText(
-				existing.estate_name,
-				record.estate_name
-			) ||
-			!sameText(
-				existing.uen,
-				record.uen
-			) ||
-			!sameText(
-				existing.source_estate_name,
-				record.source_estate_name
-			);
+		const records =
+			[
+				...recordsByMcst
+					.values()
+			];
 
 
-		if (changed) {
-			updates.push({
-				id: existing.id,
-				record
-			});
-		}
-	}
-
-
-	/*
-	 * Existing BCA records absent from the newly validated
-	 * authoritative snapshot are candidates for removal.
-	 *
-	 * This is evaluated only after the complete source dataset has
-	 * passed the population safety check above.
-	 */
-	for (
-		const existing
-		of existingByMcst.values()
-	) {
+		/*
+		 * Prevent an unexpectedly incomplete source
+		 * workbook from damaging the current snapshot.
+		 */
 		if (
-			!recordsByMcst.has(
-				existing.mcst_no
-			)
+			records.length <
+			MIN_EXPECTED_ACTIVE_RECORDS
 		) {
-			removals.push(existing);
+			throw new Error(
+				`BCA synchronisation produced only ${records.length} valid ACTIVE MCST records. Expected at least ${MIN_EXPECTED_ACTIVE_RECORDS}. Existing data was left unchanged.`
+			);
 		}
-	}
 
 
-	/*
-	 * Additional removal guard.
-	 *
-	 * A sudden large disappearance is treated as a source anomaly
-	 * rather than automatically deleting a significant part of the
-	 * registry.
-	 */
-	if (removals.length > 100) {
-		throw new Error(
-			`BCA synchronisation would remove ${removals.length} existing MCST records. This exceeds the safety limit of 100, so no changes were applied.`
-		);
-	}
+		const existingResult =
+			await db
+				.prepare(`
+					SELECT
+						id,
+						mcst_no,
+						estate_name,
+						uen,
+						source_estate_name
+					FROM mcst_records
+					WHERE source = 'BCA'
+				`)
+				.all<ExistingMcstRecord>();
 
 
-	/*
-	 * Apply inserts in controlled batches.
-	 */
-	for (
-		let i = 0;
-		i < inserts.length;
-		i += BATCH_SIZE
-	) {
-		const batch =
-			inserts.slice(
-				i,
-				i + BATCH_SIZE
+		const existingByMcst =
+			new Map<
+				string,
+				ExistingMcstRecord
+			>();
+
+
+		for (
+			const row
+			of existingResult.results ??
+				[]
+		) {
+			existingByMcst.set(
+				row.mcst_no,
+				row
 			);
-
-		await db.batch(
-			batch.map(
-				(record) =>
-					db
-						.prepare(`
-							INSERT INTO mcst_records (
-								mcst_no,
-								estate_name,
-								uen,
-								source,
-								source_estate_name,
-								created_at,
-								updated_at
-							)
-							VALUES (
-								?,
-								?,
-								?,
-								'BCA',
-								?,
-								CURRENT_TIMESTAMP,
-								CURRENT_TIMESTAMP
-							)
-						`)
-						.bind(
-							record.mcst_no,
-							record.estate_name,
-							record.uen,
-							record.source_estate_name
-						)
-			)
-		);
-	}
+		}
 
 
-	/*
-	 * Apply only records whose authoritative BCA attributes
-	 * actually changed.
-	 */
-	for (
-		let i = 0;
-		i < updates.length;
-		i += BATCH_SIZE
-	) {
-		const batch =
-			updates.slice(
-				i,
-				i + BATCH_SIZE
+		const inserts:
+			McstRecord[] = [];
+
+		const updates: {
+			id: number;
+			record: McstRecord;
+		}[] = [];
+
+		const removals:
+			ExistingMcstRecord[] = [];
+
+
+		for (const record of records) {
+
+			const existing =
+				existingByMcst.get(
+					record.mcst_no
+				);
+
+			if (!existing) {
+				inserts.push(record);
+				continue;
+			}
+
+
+			const changed =
+				!sameText(
+					existing.estate_name,
+					record.estate_name
+				) ||
+				!sameText(
+					existing.uen,
+					record.uen
+				) ||
+				!sameText(
+					existing
+						.source_estate_name,
+					record
+						.source_estate_name
+				);
+
+
+			if (changed) {
+				updates.push({
+					id: existing.id,
+					record
+				});
+			}
+		}
+
+
+		for (
+			const existing
+			of existingByMcst.values()
+		) {
+			if (
+				!recordsByMcst.has(
+					existing.mcst_no
+				)
+			) {
+				removals.push(
+					existing
+				);
+			}
+		}
+
+
+		/*
+		 * A large sudden disappearance is treated as a
+		 * source anomaly, not an instruction to delete
+		 * a substantial part of the registry.
+		 */
+		if (removals.length > 100) {
+			throw new Error(
+				`BCA synchronisation would remove ${removals.length} existing MCST records. This exceeds the safety limit of 100, so no changes were applied.`
 			);
+		}
 
-		await db.batch(
-			batch.map(
-				(item) =>
-					db
-						.prepare(`
-							UPDATE mcst_records
-							SET
-								estate_name = ?,
-								uen = ?,
-								source_estate_name = ?,
-								updated_at =
+
+		/*
+		 * Insert only genuinely new MCST records.
+		 */
+		for (
+			let i = 0;
+			i < inserts.length;
+			i += BATCH_SIZE
+		) {
+			const batch =
+				inserts.slice(
+					i,
+					i + BATCH_SIZE
+				);
+
+			await db.batch(
+				batch.map(
+					(record) =>
+						db
+							.prepare(`
+								INSERT INTO mcst_records (
+									mcst_no,
+									estate_name,
+									uen,
+									source,
+									source_estate_name,
+									created_at,
+									updated_at
+								)
+								VALUES (
+									?,
+									?,
+									?,
+									'BCA',
+									?,
+									CURRENT_TIMESTAMP,
 									CURRENT_TIMESTAMP
-							WHERE
-								id = ?
-								AND source = 'BCA'
-						`)
-						.bind(
-							item.record
-								.estate_name,
-							item.record.uen,
-							item.record
-								.source_estate_name,
-							item.id
-						)
-			)
-		);
-	}
-
-
-	/*
-	 * Remove BCA population records that are no longer present in
-	 * the validated authoritative snapshot.
-	 *
-	 * This does NOT delete dpo_records.
-	 */
-	for (
-		let i = 0;
-		i < removals.length;
-		i += BATCH_SIZE
-	) {
-		const batch =
-			removals.slice(
-				i,
-				i + BATCH_SIZE
+								)
+							`)
+							.bind(
+								record.mcst_no,
+								record.estate_name,
+								record.uen,
+								record
+									.source_estate_name
+							)
+				)
 			);
+		}
 
-		await db.batch(
-			batch.map(
-				(item) =>
-					db
-						.prepare(`
-							DELETE FROM mcst_records
-							WHERE
-								id = ?
-								AND source = 'BCA'
-						`)
-						.bind(
-							item.id
-						)
-			)
+
+		/*
+		 * Update only BCA records whose authoritative
+		 * attributes changed.
+		 */
+		for (
+			let i = 0;
+			i < updates.length;
+			i += BATCH_SIZE
+		) {
+			const batch =
+				updates.slice(
+					i,
+					i + BATCH_SIZE
+				);
+
+			await db.batch(
+				batch.map(
+					(item) =>
+						db
+							.prepare(`
+								UPDATE mcst_records
+								SET
+									estate_name = ?,
+									uen = ?,
+									source_estate_name = ?,
+									updated_at =
+										CURRENT_TIMESTAMP
+								WHERE
+									id = ?
+									AND source = 'BCA'
+							`)
+							.bind(
+								item.record
+									.estate_name,
+								item.record
+									.uen,
+								item.record
+									.source_estate_name,
+								item.id
+							)
+				)
+			);
+		}
+
+
+		/*
+		 * Remove only BCA population rows absent from
+		 * the fully validated new source snapshot.
+		 *
+		 * DPO research records are not deleted.
+		 */
+		for (
+			let i = 0;
+			i < removals.length;
+			i += BATCH_SIZE
+		) {
+			const batch =
+				removals.slice(
+					i,
+					i + BATCH_SIZE
+				);
+
+			await db.batch(
+				batch.map(
+					(item) =>
+						db
+							.prepare(`
+								DELETE FROM mcst_records
+								WHERE
+									id = ?
+									AND source = 'BCA'
+							`)
+							.bind(
+								item.id
+							)
+				)
+			);
+		}
+
+
+		/*
+		 * Reconcile lookup jobs only after the BCA
+		 * population reconciliation succeeds.
+		 */
+		await replaceLookupJobs(
+			db
 		);
+
+
+		/*
+		 * Record the successful explicit sync even when
+		 * there were zero source-data changes.
+		 */
+		await completeSyncHistory(
+			db,
+			syncHistoryId,
+			records.length,
+			inserts.length,
+			updates.length,
+			removals.length
+		);
+
+
+		return {
+			ok: true,
+			count: records.length,
+			inserted: inserts.length,
+			updated: updates.length
+		};
+
+	} catch (error) {
+
+		await failSyncHistory(
+			db,
+			syncHistoryId,
+			error
+		);
+
+		throw error;
 	}
-
-
-	/*
-	 * Reconcile the lookup-job population only after the BCA
-	 * population changes have completed successfully.
-	 *
-	 * Existing completed research is preserved by
-	 * replaceLookupJobs().
-	 */
-	await replaceLookupJobs(
-		db
-	);
-
-
-	return {
-		ok: true,
-		count: records.length,
-		inserted: inserts.length,
-		updated: updates.length
-	};
 }
