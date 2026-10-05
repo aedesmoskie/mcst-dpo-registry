@@ -1,1 +1,112 @@
-import type {APIRoute} from 'astro';export const prerender=false;export const GET:APIRoute=async({request,locals})=>{try{const db=(locals.runtime.env as any).DB as D1Database,q=new URL(request.url).searchParams.get('q')?.trim()??'';if(!q)return Response.json({ok:true,rows:[]});const like=`%${q}%`;const r=await db.prepare(`SELECT mcst_no,estate_name,uen,dpo_found,dpo_name,dpo_email,dpo_company,record_discrepancy FROM dpo_records WHERE mcst_no LIKE ? OR estate_name LIKE ? OR uen LIKE ? OR dpo_name LIKE ? OR dpo_email LIKE ? OR pdpc_organisation_name LIKE ? OR pdpc_uen LIKE ? ORDER BY CAST(mcst_no AS INTEGER),id LIMIT 500`).bind(like,like,like,like,like,like,like).all<any>();return Response.json({ok:true,rows:(r.results??[]).map(x=>({'MCST#':x.mcst_no,'Estate Name':x.estate_name??'','UEN':x.uen??'','DPO(Y/N)':x.dpo_found?'Y':'N','DPO Name':x.dpo_name??'','DPO Email':x.dpo_email??'','DPO Company':x.dpo_company??'','Record Discrepancy(Y/N)':x.record_discrepancy?'Y':'N'}))});}catch(e){return Response.json({ok:false,error:e instanceof Error?e.message:String(e)},{status:500});}};
+import type { APIRoute } from 'astro';
+
+export const prerender = false;
+
+export const GET: APIRoute = async ({ request, locals }) => {
+	try {
+		const db =
+			(locals.runtime.env as any).DB as D1Database;
+
+		const q =
+			new URL(request.url)
+				.searchParams
+				.get('q')
+				?.trim() ?? '';
+
+		if (!q) {
+			return Response.json({
+				ok: true,
+				rows: []
+			});
+		}
+
+		const like = `%${q}%`;
+
+		const r =
+			await db
+				.prepare(`
+					SELECT
+						mcst_no,
+						estate_name,
+						uen,
+						dpo_found,
+						dpo_name,
+						dpo_email,
+						dpo_company,
+						record_discrepancy
+					FROM dpo_records
+					WHERE
+						mcst_no LIKE ?
+						OR estate_name LIKE ?
+						OR uen LIKE ?
+						OR dpo_name LIKE ?
+						OR dpo_email LIKE ?
+						OR pdpc_organisation_name LIKE ?
+						OR pdpc_uen LIKE ?
+					ORDER BY
+						CAST(mcst_no AS INTEGER),
+						id
+					LIMIT 500
+				`)
+				.bind(
+					like,
+					like,
+					like,
+					like,
+					like,
+					like,
+					like
+				)
+				.all<any>();
+
+		return Response.json({
+			ok: true,
+
+			rows:
+				(r.results ?? []).map(
+					(x) => ({
+						'MCST#':
+							x.mcst_no,
+
+						'Estate Name':
+							x.estate_name ?? '',
+
+						'UEN':
+							x.uen ?? '',
+
+						'DPO(Y/N)':
+							x.dpo_found
+								? 'Y'
+								: 'N',
+
+						'DPO Name':
+							x.dpo_name ?? '',
+
+						'DPO Email':
+							x.dpo_email ?? '',
+
+						'DPO Company':
+							x.dpo_company ?? '',
+
+						'Record Discrepancy(Y/N)':
+							x.record_discrepancy
+								? 'Y'
+								: 'N'
+					})
+				)
+		});
+	} catch (e) {
+		return Response.json(
+			{
+				ok: false,
+				error:
+					e instanceof Error
+						? e.message
+						: String(e)
+			},
+			{
+				status: 500
+			}
+		);
+	}
+};
