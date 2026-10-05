@@ -3,9 +3,16 @@ import { getLookupProgress } from '../../lib/db';
 
 export const prerender = false;
 
-type LastSyncRow = {
-	last_sync: string | null;
+
+type PopulationRow = {
+	total_mcsts: number;
 };
+
+
+type LastSyncRow = {
+	completed_at: string | null;
+};
+
 
 export const GET: APIRoute =
 	async ({ locals }) => {
@@ -14,21 +21,20 @@ export const GET: APIRoute =
 				(locals.runtime.env as any)
 					.DB as D1Database;
 
+
 			/*
-			 * Existing lookup/research statistics.
-			 *
-			 * getLookupProgress() remains the canonical
-			 * source for these values so we do not
-			 * duplicate the existing calculation logic.
+			 * Existing DPO research statistics.
 			 */
 			const progress =
 				await getLookupProgress(db);
 
+
 			/*
-			 * Current BCA population.
+			 * Current authoritative BCA population.
 			 *
-			 * MCST# is the canonical identity, including
-			 * subsidiary identifiers such as 01-4355.
+			 * The complete MCST identifier remains the
+			 * canonical identity, including subsidiary
+			 * identifiers such as 01-4355.
 			 */
 			const populationResult =
 				await db
@@ -40,9 +46,8 @@ export const GET: APIRoute =
 						FROM mcst_records
 						WHERE source = 'BCA'
 					`)
-					.first<{
-						total_mcsts: number;
-					}>();
+					.first<PopulationRow>();
+
 
 			const totalMcsts =
 				Number(
@@ -50,29 +55,37 @@ export const GET: APIRoute =
 						?.total_mcsts ?? 0
 				);
 
+
 			/*
-			 * Until dedicated sync metadata is introduced,
-			 * MAX(updated_at) is our best available marker
-			 * for the most recent successful BCA population
-			 * update.
+			 * Last Sync means the most recent successfully
+			 * completed explicit BCA synchronisation.
 			 *
-			 * This is read-only and requires no schema
-			 * migration.
+			 * Failed or currently running attempts do not
+			 * replace the last known successful sync time.
 			 */
 			const lastSyncResult =
 				await db
 					.prepare(`
 						SELECT
-							MAX(updated_at)
-								AS last_sync
-						FROM mcst_records
-						WHERE source = 'BCA'
+							completed_at
+						FROM sync_history
+						WHERE
+							source = 'BCA'
+							AND status = 'completed'
+							AND completed_at IS NOT NULL
+						ORDER BY
+							completed_at DESC,
+							id DESC
+						LIMIT 1
 					`)
 					.first<LastSyncRow>();
 
+
 			const lastSync =
-				lastSyncResult?.last_sync ??
+				lastSyncResult
+					?.completed_at ??
 				null;
+
 
 			return Response.json({
 				ok: true,
@@ -113,10 +126,13 @@ export const GET: APIRoute =
 
 				lastSync
 			});
+
 		} catch (e) {
+
 			return Response.json(
 				{
 					ok: false,
+
 					error:
 						e instanceof Error
 							? e.message
