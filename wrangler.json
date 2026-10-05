@@ -11,7 +11,7 @@
 		{
 			"binding": "DB",
 			"database_name": "mcst-dpo-registry",
-			"database_id": "YOUR_DATABASE_ID"
+			"database_id": "762dff8b-9496-4dfb-8d84-cf82c3b48372"
 		}
 	],
 	"observability": {
