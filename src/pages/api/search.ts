@@ -591,16 +591,10 @@ export const GET: APIRoute =
 							m.mcst_no
 								AS mcst_no,
 
-							COALESCE(
-								d.estate_name,
-								m.estate_name
-							)
+							m.estate_name
 								AS estate_name,
 
-							COALESCE(
-								d.uen,
-								m.uen
-							)
+							m.uen
 								AS uen,
 
 							d.dpo_found
