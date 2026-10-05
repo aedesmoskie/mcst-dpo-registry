@@ -1,1 +1,28 @@
-import type {APIRoute} from 'astro';import {syncBcaToDatabase} from '../../lib/bca';export const prerender=false;export const POST:APIRoute=async({locals})=>{try{return Response.json(await syncBcaToDatabase((locals.runtime.env as any).DB));}catch(e){return Response.json({ok:false,error:e instanceof Error?e.message:String(e)},{status:500});}};
+import type { APIRoute } from 'astro';
+
+import { syncBcaToDatabase } from '../../lib/bca';
+
+export const prerender = false;
+
+export const POST: APIRoute = async ({ locals }) => {
+	try {
+		return Response.json(
+			await syncBcaToDatabase(
+				(locals.runtime.env as any).DB
+			)
+		);
+	} catch (e) {
+		return Response.json(
+			{
+				ok: false,
+				error:
+					e instanceof Error
+						? e.message
+						: String(e)
+			},
+			{
+				status: 500
+			}
+		);
+	}
+};
