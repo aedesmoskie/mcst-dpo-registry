@@ -12,11 +12,21 @@ import {
 } from './normalise';
 
 
-export async function upsertMcstRecord(
+const D1_BATCH_SIZE = 75;
+
+
+/*
+ * Builds the canonical BCA upsert statement.
+ *
+ * Keeping statement construction here means both single-record writes
+ * and bulk synchronisation use exactly the same persistence rules.
+ */
+function prepareMcstUpsert(
 	db: D1Database,
 	record: McstRecord,
-): Promise<void> {
-	const mcstNo = normaliseMcstNumber(record.mcst_no);
+): D1PreparedStatement {
+	const mcstNo =
+		normaliseMcstNumber(record.mcst_no);
 
 	if (!mcstNo) {
 		throw new Error(
@@ -24,13 +34,21 @@ export async function upsertMcstRecord(
 		);
 	}
 
-	const estateName = cleanSourceText(record.estate_name);
-	const uen = normaliseUen(record.uen);
-	const source = cleanSourceText(record.source) || 'BCA';
-	const sourceEstateName =
-		cleanSourceText(record.source_estate_name) || estateName;
+	const estateName =
+		cleanSourceText(record.estate_name);
 
-	await db
+	const uen =
+		normaliseUen(record.uen);
+
+	const source =
+		cleanSourceText(record.source) || 'BCA';
+
+	const sourceEstateName =
+		cleanSourceText(
+			record.source_estate_name,
+		) || estateName;
+
+	return db
 		.prepare(`
 			INSERT INTO mcst_records (
 				mcst_no,
@@ -45,8 +63,10 @@ export async function upsertMcstRecord(
 			ON CONFLICT(mcst_no, estate_name, source)
 			DO UPDATE SET
 				uen = excluded.uen,
-				source_estate_name = excluded.source_estate_name,
-				updated_at = CURRENT_TIMESTAMP
+				source_estate_name =
+					excluded.source_estate_name,
+				updated_at =
+					CURRENT_TIMESTAMP
 		`)
 		.bind(
 			mcstNo,
@@ -54,18 +74,78 @@ export async function upsertMcstRecord(
 			uen,
 			source,
 			sourceEstateName,
-		)
-		.run();
+		);
+}
+
+
+export async function upsertMcstRecord(
+	db: D1Database,
+	record: McstRecord,
+): Promise<void> {
+	await prepareMcstUpsert(
+		db,
+		record,
+	).run();
+}
+
+
+/*
+ * Writes MCST records to D1 in bounded batches.
+ *
+ * This avoids issuing thousands of sequential database round-trips
+ * during a complete BCA population refresh.
+ */
+export async function upsertMcstRecords(
+	db: D1Database,
+	records: McstRecord[],
+): Promise<number> {
+	let processed = 0;
+
+	for (
+		let start = 0;
+		start < records.length;
+		start += D1_BATCH_SIZE
+	) {
+		const chunk =
+			records.slice(
+				start,
+				start + D1_BATCH_SIZE,
+			);
+
+		if (chunk.length === 0) {
+			continue;
+		}
+
+		const statements =
+			chunk.map((record) =>
+				prepareMcstUpsert(
+					db,
+					record,
+				),
+			);
+
+		await db.batch(statements);
+
+		processed += chunk.length;
+	}
+
+	return processed;
 }
 
 
 export async function replaceLookupJobs(
 	db: D1Database,
 ): Promise<void> {
-	await db.prepare('DELETE FROM lookup_jobs').run();
+	/*
+	 * Queue recreation is deliberately separate from DPO results.
+	 * Existing observations are not deleted.
+	 */
+	await db.batch([
+		db.prepare(`
+			DELETE FROM lookup_jobs
+		`),
 
-	await db
-		.prepare(`
+		db.prepare(`
 			INSERT INTO lookup_jobs (
 				mcst_no,
 				status,
@@ -77,9 +157,10 @@ export async function replaceLookupJobs(
 				0
 			FROM mcst_records
 			WHERE source = 'BCA'
-			ORDER BY CAST(mcst_no AS INTEGER)
-		`)
-		.run();
+			ORDER BY
+				CAST(mcst_no AS INTEGER)
+		`),
+	]);
 }
 
 
@@ -87,32 +168,40 @@ export async function getNextLookupJobs(
 	db: D1Database,
 	limit = 3,
 ): Promise<McstRecord[]> {
-	const safeLimit = Math.max(
-		1,
-		Math.min(limit, 10),
-	);
+	const safeLimit =
+		Math.max(
+			1,
+			Math.min(limit, 10),
+		);
 
-	const result = await db
-		.prepare(`
-			SELECT
-				m.id,
-				m.mcst_no,
-				m.estate_name,
-				m.uen,
-				m.source,
-				m.source_estate_name
-			FROM lookup_jobs j
-			INNER JOIN mcst_records m
-				ON m.mcst_no = j.mcst_no
-				AND m.source = 'BCA'
-			WHERE j.status IN ('pending', 'failed')
-			ORDER BY
-				CAST(m.mcst_no AS INTEGER),
-				m.id
-			LIMIT ?
-		`)
-		.bind(safeLimit)
-		.all<McstRecord>();
+	/*
+	 * Failed jobs are intentionally excluded.
+	 *
+	 * They return to this queue only after the explicit
+	 * Retry Failed operation changes them back to pending.
+	 */
+	const result =
+		await db
+			.prepare(`
+				SELECT
+					m.id,
+					m.mcst_no,
+					m.estate_name,
+					m.uen,
+					m.source,
+					m.source_estate_name
+				FROM lookup_jobs j
+				INNER JOIN mcst_records m
+					ON m.mcst_no = j.mcst_no
+					AND m.source = 'BCA'
+				WHERE j.status = 'pending'
+				ORDER BY
+					CAST(m.mcst_no AS INTEGER),
+					m.id
+				LIMIT ?
+			`)
+			.bind(safeLimit)
+			.all<McstRecord>();
 
 	return result.results ?? [];
 }
@@ -129,11 +218,39 @@ export async function markLookupProcessing(
 				status = 'processing',
 				attempts = attempts + 1,
 				started_at = CURRENT_TIMESTAMP,
+				completed_at = NULL,
 				last_error = NULL,
 				updated_at = CURRENT_TIMESTAMP
 			WHERE mcst_no = ?
+				AND status = 'pending'
 		`)
-		.bind(normaliseMcstNumber(mcstNo))
+		.bind(
+			normaliseMcstNumber(mcstNo),
+		)
+		.run();
+}
+
+
+export async function markLookupPending(
+	db: D1Database,
+	mcstNo: string,
+	reason = '',
+): Promise<void> {
+	await db
+		.prepare(`
+			UPDATE lookup_jobs
+			SET
+				status = 'pending',
+				last_error = ?,
+				started_at = NULL,
+				completed_at = NULL,
+				updated_at = CURRENT_TIMESTAMP
+			WHERE mcst_no = ?
+		`)
+		.bind(
+			reason.slice(0, 2000),
+			normaliseMcstNumber(mcstNo),
+		)
 		.run();
 }
 
@@ -147,11 +264,16 @@ export async function markLookupCompleted(
 			UPDATE lookup_jobs
 			SET
 				status = 'completed',
-				completed_at = CURRENT_TIMESTAMP,
-				updated_at = CURRENT_TIMESTAMP
+				last_error = NULL,
+				completed_at =
+					CURRENT_TIMESTAMP,
+				updated_at =
+					CURRENT_TIMESTAMP
 			WHERE mcst_no = ?
 		`)
-		.bind(normaliseMcstNumber(mcstNo))
+		.bind(
+			normaliseMcstNumber(mcstNo),
+		)
 		.run();
 }
 
@@ -167,7 +289,9 @@ export async function markLookupFailed(
 			SET
 				status = 'failed',
 				last_error = ?,
-				updated_at = CURRENT_TIMESTAMP
+				completed_at = NULL,
+				updated_at =
+					CURRENT_TIMESTAMP
 			WHERE mcst_no = ?
 		`)
 		.bind(
@@ -187,7 +311,9 @@ export async function clearExistingDpoResults(
 			DELETE FROM dpo_records
 			WHERE mcst_no = ?
 		`)
-		.bind(normaliseMcstNumber(mcstNo))
+		.bind(
+			normaliseMcstNumber(mcstNo),
+		)
 		.run();
 }
 
@@ -197,10 +323,11 @@ export async function clearExistingDpoResults(
  *
  * This means only:
  *
- * "No DPO registration was found in the PDPC registry during this lookup."
+ * "No DPO registration was found in the PDPC registry during
+ * this lookup."
  *
- * It must NOT be interpreted as proof that the MCST has not appointed
- * a DPO through some other mechanism.
+ * It must NOT be interpreted as proof that the MCST has not
+ * appointed a DPO through some other mechanism.
  */
 export async function saveNoDpoResult(
 	db: D1Database,
@@ -234,9 +361,15 @@ export async function saveNoDpoResult(
 			)
 		`)
 		.bind(
-			normaliseMcstNumber(record.mcst_no),
-			normaliseUen(record.uen),
-			cleanSourceText(record.estate_name),
+			normaliseMcstNumber(
+				record.mcst_no,
+			),
+			normaliseUen(
+				record.uen,
+			),
+			cleanSourceText(
+				record.estate_name,
+			),
 			lookupStatus,
 			lookupMethod,
 		)
@@ -247,7 +380,8 @@ export async function saveNoDpoResult(
 /**
  * Saves every PDPC DPO observation independently.
  *
- * Multiple DPOs for the same UEN therefore become multiple output rows.
+ * Multiple DPOs for the same UEN therefore become multiple
+ * output rows.
  */
 export async function saveDpoObservations(
 	db: D1Database,
@@ -257,72 +391,92 @@ export async function saveDpoObservations(
 	lookupMethod: string,
 ): Promise<void> {
 	const mcstNo =
-		normaliseMcstNumber(record.mcst_no);
+		normaliseMcstNumber(
+			record.mcst_no,
+		);
 
 	const bcaUen =
-		normaliseUen(record.uen);
+		normaliseUen(
+			record.uen,
+		);
 
 	const bcaEstate =
-		cleanSourceText(record.estate_name);
+		cleanSourceText(
+			record.estate_name,
+		);
 
 	for (const observation of observations) {
 		const pdpcUen =
-			normaliseUen(observation.uen);
+			normaliseUen(
+				observation.uen,
+			);
 
 		const pdpcName =
 			cleanSourceText(
 				observation.organisationName,
 			);
 
-		const identity = compareIdentity({
-			bcaMcstNo: mcstNo,
-			bcaUen,
-			bcaEstateName: bcaEstate,
-			pdpcUen,
-			pdpcEntityName: pdpcName,
-		});
+		const identity =
+			compareIdentity({
+				bcaMcstNo: mcstNo,
+				bcaUen,
+				bcaEstateName:
+					bcaEstate,
+				pdpcUen,
+				pdpcEntityName:
+					pdpcName,
+			});
 
 		/*
-		 * The canonical output UEN remains the BCA UEN where available.
-		 *
-		 * If BCA has no UEN, retain the UEN returned by PDPC.
+		 * BCA UEN remains the canonical output UEN where
+		 * available. If BCA has no UEN, retain PDPC's UEN.
 		 */
 		const outputUen =
 			bcaUen || pdpcUen;
 
-		await insertDpoRow(db, {
-			mcstNo,
-			uen: outputUen,
-			estateName: bcaEstate,
-			observation,
-			pdpcName,
-			discrepancy: identity.discrepancy,
-			lookupStatus,
-			lookupMethod,
-		});
-
+		await insertDpoRow(
+			db,
+			{
+				mcstNo,
+				uen: outputUen,
+				estateName:
+					bcaEstate,
+				observation,
+				pdpcName,
+				discrepancy:
+					identity.discrepancy,
+				lookupStatus,
+				lookupMethod,
+			},
+		);
 
 		/*
-		 * A genuine identity conflict is preserved visibly.
-		 *
-		 * If PDPC points to a conflicting identity/name, create an
-		 * additional row rather than silently overwriting BCA data.
+		 * Preserve a genuine identity conflict as an
+		 * additional visible row rather than overwriting
+		 * the BCA identity.
 		 */
 		if (
 			identity.discrepancy &&
 			pdpcName &&
 			pdpcName !== bcaEstate
 		) {
-			await insertDpoRow(db, {
-				mcstNo,
-				uen: pdpcUen || outputUen,
-				estateName: pdpcName,
-				observation,
-				pdpcName,
-				discrepancy: true,
-				lookupStatus,
-				lookupMethod,
-			});
+			await insertDpoRow(
+				db,
+				{
+					mcstNo,
+					uen:
+						pdpcUen ||
+						outputUen,
+					estateName:
+						pdpcName,
+					observation,
+					pdpcName,
+					discrepancy:
+						true,
+					lookupStatus,
+					lookupMethod,
+				},
+			);
 		}
 	}
 }
@@ -373,17 +527,17 @@ async function insertDpoRow(
 			args.mcstNo,
 			args.uen,
 			args.estateName,
+
 			cleanSourceText(
 				args.observation.dpoName,
 			),
+
 			cleanSourceText(
 				args.observation.dpoEmail,
 			),
 
 			/*
-			 * Do not infer a company from the DPO's email domain.
-			 * PDPC does not expose a separate company field in the
-			 * registry result shown to us.
+			 * Do not infer DPO company from an email domain.
 			 */
 			cleanSourceText(
 				args.observation.dpoCompany,
@@ -401,34 +555,35 @@ async function insertDpoRow(
 export async function getOutputRows(
 	db: D1Database,
 ): Promise<OutputRow[]> {
-	const result = await db
-		.prepare(`
-			SELECT
-				mcst_no,
-				estate_name,
-				uen,
-				dpo_found,
-				dpo_name,
-				dpo_email,
-				dpo_company,
-				record_discrepancy
-			FROM dpo_records
-			ORDER BY
-				CAST(mcst_no AS INTEGER),
-				estate_name,
-				dpo_name,
-				dpo_email
-		`)
-		.all<{
-			mcst_no: string;
-			estate_name: string;
-			uen: string;
-			dpo_found: number;
-			dpo_name: string;
-			dpo_email: string;
-			dpo_company: string;
-			record_discrepancy: number;
-		}>();
+	const result =
+		await db
+			.prepare(`
+				SELECT
+					mcst_no,
+					estate_name,
+					uen,
+					dpo_found,
+					dpo_name,
+					dpo_email,
+					dpo_company,
+					record_discrepancy
+				FROM dpo_records
+				ORDER BY
+					CAST(mcst_no AS INTEGER),
+					estate_name,
+					dpo_name,
+					dpo_email
+			`)
+			.all<{
+				mcst_no: string;
+				estate_name: string;
+				uen: string;
+				dpo_found: number;
+				dpo_name: string;
+				dpo_email: string;
+				dpo_company: string;
+				record_discrepancy: number;
+			}>();
 
 	return (result.results ?? []).map(
 		(row) => ({
@@ -442,7 +597,9 @@ export async function getOutputRows(
 				row.uen ?? '',
 
 			'DPO(Y/N)':
-				row.dpo_found ? 'Y' : 'N',
+				row.dpo_found
+					? 'Y'
+					: 'N',
 
 			'DPO Name':
 				row.dpo_name ?? '',
@@ -471,60 +628,78 @@ export async function getLookupProgress(
 	completed: number;
 	failed: number;
 }> {
-	const result = await db
-		.prepare(`
-			SELECT
-				COUNT(*) AS total,
+	const result =
+		await db
+			.prepare(`
+				SELECT
+					COUNT(*) AS total,
 
-				SUM(
-					CASE
-						WHEN status = 'pending'
-						THEN 1
-						ELSE 0
-					END
-				) AS pending,
+					SUM(
+						CASE
+							WHEN status = 'pending'
+								THEN 1
+							ELSE 0
+						END
+					) AS pending,
 
-				SUM(
-					CASE
-						WHEN status = 'processing'
-						THEN 1
-						ELSE 0
-					END
-				) AS processing,
+					SUM(
+						CASE
+							WHEN status = 'processing'
+								THEN 1
+							ELSE 0
+						END
+					) AS processing,
 
-				SUM(
-					CASE
-						WHEN status = 'completed'
-						THEN 1
-						ELSE 0
-					END
-				) AS completed,
+					SUM(
+						CASE
+							WHEN status = 'completed'
+								THEN 1
+							ELSE 0
+						END
+					) AS completed,
 
-				SUM(
-					CASE
-						WHEN status = 'failed'
-						THEN 1
-						ELSE 0
-					END
-				) AS failed
+					SUM(
+						CASE
+							WHEN status = 'failed'
+								THEN 1
+							ELSE 0
+						END
+					) AS failed
 
-			FROM lookup_jobs
-		`)
-		.first<{
-			total: number;
-			pending: number;
-			processing: number;
-			completed: number;
-			failed: number;
-		}>();
+				FROM lookup_jobs
+			`)
+			.first<{
+				total: number;
+				pending: number;
+				processing: number;
+				completed: number;
+				failed: number;
+			}>();
 
 	return {
-		total: Number(result?.total ?? 0),
-		pending: Number(result?.pending ?? 0),
+		total:
+			Number(
+				result?.total ?? 0,
+			),
+
+		pending:
+			Number(
+				result?.pending ?? 0,
+			),
+
 		processing:
-			Number(result?.processing ?? 0),
+			Number(
+				result?.processing ?? 0,
+			),
+
 		completed:
-			Number(result?.completed ?? 0),
-		failed: Number(result?.failed ?? 0),
+			Number(
+				result?.completed ?? 0,
+			),
+
+		failed:
+			Number(
+				result?.failed ?? 0,
+			),
 	};
 }
