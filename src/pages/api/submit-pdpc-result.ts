@@ -31,12 +31,17 @@ type SubmissionStatus =
 	| 'cancelled';
 
 
+type SearchType =
+	| 'uen'
+	| 'estate_name';
+
+
 interface SubmissionBody {
 	mcstNo?: string;
 
 	status?: SubmissionStatus;
 
-	searchType?: 'uen' | 'estate_name';
+	searchType?: SearchType;
 
 	searchValue?: string;
 
@@ -84,7 +89,9 @@ async function getBcaRecord(
 				WHERE
 					mcst_no = ?
 					AND source = 'BCA'
-				ORDER BY id DESC
+				ORDER BY
+					updated_at DESC,
+					id DESC
 				LIMIT 1
 			`)
 			.bind(mcstNo)
@@ -111,6 +118,10 @@ function normaliseObservations(
 						item.organisationName,
 					),
 
+				/*
+				 * Preserve the PDPC-returned identity independently
+				 * from the canonical BCA UEN.
+				 */
 				uen:
 					normaliseUen(
 						item.uen,
@@ -126,6 +137,11 @@ function normaliseObservations(
 						item.dpoEmail,
 					),
 
+				/*
+				 * PDPC currently does not expose a separate DPO
+				 * company field in the registry result used by this
+				 * workflow. Do not infer one from the email domain.
+				 */
 				dpoCompany:
 					cleanSourceText(
 						item.dpoCompany,
@@ -138,9 +154,52 @@ function normaliseObservations(
 					item.organisationName ||
 					item.uen ||
 					item.dpoName ||
-					item.dpoEmail,
+					item.dpoEmail ||
+					item.dpoCompany,
 				),
 		);
+}
+
+
+function resolveSearchType(
+	body: SubmissionBody,
+	record: McstRecord,
+): SearchType {
+	if (
+		body.searchType === 'uen' ||
+		body.searchType === 'estate_name'
+	) {
+		return body.searchType;
+	}
+
+	/*
+	 * UEN is the primary identifier.
+	 *
+	 * If BCA has no UEN, fall back to the estate/entity name rather
+	 * than constructing an invalid empty UEN search.
+	 */
+	return normaliseUen(record.uen)
+		? 'uen'
+		: 'estate_name';
+}
+
+
+function resolveSearchValue(
+	body: SubmissionBody,
+	record: McstRecord,
+	searchType: SearchType,
+): string {
+	if (searchType === 'uen') {
+		return normaliseUen(
+			body.searchValue ||
+				record.uen,
+		);
+	}
+
+	return cleanSourceText(
+		body.searchValue ||
+			record.estate_name,
+	);
 }
 
 
@@ -220,10 +279,11 @@ export const POST: APIRoute =
 
 
 			/*
-			 * Verification/cancellation never creates or changes
-			 * a DPO result.
+			 * Verification/cancellation never creates, replaces,
+			 * or deletes a DPO result.
 			 *
-			 * The MCST simply remains pending.
+			 * The MCST simply remains pending so the lookup can be
+			 * resumed later.
 			 */
 			if (
 				body.status ===
@@ -256,21 +316,17 @@ export const POST: APIRoute =
 
 
 			const searchType =
-				body.searchType ===
-					'estate_name'
-					? 'estate_name'
-					: 'uen';
+				resolveSearchType(
+					body,
+					record,
+				);
 
 			const searchValue =
-				searchType === 'uen'
-					? normaliseUen(
-							body.searchValue ||
-								record.uen,
-						)
-					: cleanSourceText(
-							body.searchValue ||
-								record.estate_name,
-						);
+				resolveSearchValue(
+					body,
+					record,
+					searchType,
+				);
 
 			if (!searchValue) {
 				return jsonError(
@@ -280,8 +336,8 @@ export const POST: APIRoute =
 
 
 			/*
-			 * Mark processing only once we have received a completed
-			 * human-assisted lookup submission.
+			 * The lookup becomes processing only when a completed
+			 * human-assisted result is submitted.
 			 */
 			await markLookupProcessing(
 				env.DB,
@@ -311,46 +367,27 @@ export const POST: APIRoute =
 
 
 				/*
-				 * For a UEN lookup, reject a submitted result when
-				 * every returned observation points to a different
-				 * UEN.
+				 * IMPORTANT:
 				 *
-				 * Genuine conflicts can still be preserved where at
-				 * least one observation corresponds to the requested
-				 * identity.
+				 * Do not reject an observation merely because the
+				 * PDPC-returned UEN differs from the BCA UEN.
+				 *
+				 * A conflicting authoritative identifier is itself
+				 * evidence that must be preserved. The database layer
+				 * compares BCA and PDPC identity, stores the returned
+				 * PDPC UEN independently, and flags the row with the
+				 * appropriate discrepancy reason.
+				 *
+				 * Multiple actual DPO observations are also retained
+				 * as multiple rows.
 				 */
-				if (searchType === 'uen') {
-					const requestedUen =
-						normaliseUen(
-							searchValue,
-						);
-
-					const hasMatchingUen =
-						observations.some(
-							(item) =>
-								normaliseUen(
-									item.uen,
-								) ===
-								requestedUen,
-						);
-
-					if (!hasMatchingUen) {
-						await markLookupPending(
-							env.DB,
-							mcstNo,
-							'Submitted PDPC result did not contain the searched UEN.',
-						);
-
-						return jsonError(
-							'The submitted PDPC result does not contain the searched UEN.',
-						);
-					}
-				}
 
 
 				/*
-				 * Previous observations are replaced only after the
-				 * submitted lookup has passed validation.
+				 * Replace only the current final-output rows.
+				 *
+				 * Historical lookup evidence in
+				 * pdpc_lookup_attempts is deliberately retained.
 				 */
 				await clearExistingDpoResults(
 					env.DB,
@@ -363,6 +400,7 @@ export const POST: APIRoute =
 					observations,
 					'found',
 					searchType,
+					searchValue,
 				);
 
 				await markLookupCompleted(
@@ -376,9 +414,14 @@ export const POST: APIRoute =
 
 					completed: true,
 
-					status: 'found',
+					status:
+						'found',
 
 					mcstNo,
+
+					searchType,
+
+					searchValue,
 
 					observationCount:
 						observations.length,
@@ -390,8 +433,12 @@ export const POST: APIRoute =
 			 * DPO=N is written ONLY when the user explicitly submits
 			 * a completed "not found" PDPC registry search.
 			 *
-			 * It means no registration was found in the registry.
-			 * It does not assert that the MCST has no appointed DPO.
+			 * It means:
+			 *
+			 * "No DPO registration was found in the PDPC registry
+			 * for this completed search."
+			 *
+			 * It does NOT assert that the MCST has no appointed DPO.
 			 */
 			if (body.status === 'not_found') {
 				await clearExistingDpoResults(
@@ -404,6 +451,7 @@ export const POST: APIRoute =
 					record,
 					'not_found',
 					searchType,
+					searchValue,
 				);
 
 				await markLookupCompleted(
@@ -421,6 +469,10 @@ export const POST: APIRoute =
 						'not_found',
 
 					mcstNo,
+
+					searchType,
+
+					searchValue,
 
 					message:
 						'No PDPC registry result was recorded for this completed lookup.',
