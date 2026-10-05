@@ -40,15 +40,26 @@ function textValue(value: unknown): string {
 		return '';
 	}
 
-	return String(value).trim();
+	const text = String(value).trim();
+
+	/*
+	 * The BCA workbook uses placeholder strings in fields that are
+	 * logically empty. They must not be interpreted as actual values.
+	 */
+	if (/^(?:NA|N\/A|NULL|NIL|-)$/i.test(text)) {
+		return '';
+	}
+
+	return text;
 }
 
 export async function syncBcaToDatabase(
 	db: D1Database
 ): Promise<SyncResult> {
 	/*
-	 * Obtain the current download URL from data.gov.sg rather than
-	 * hard-coding a particular XLSX file URL.
+	 * Ask data.gov.sg for the current download URL for the official
+	 * BCA MCST dataset. The application therefore does not depend on
+	 * a manually downloaded workbook or a fixed XLSX URL.
 	 */
 	const catalogueResponse = await fetch(POLL_DOWNLOAD, {
 		headers: {
@@ -72,7 +83,7 @@ export async function syncBcaToDatabase(
 	}
 
 	/*
-	 * Download the current official BCA workbook.
+	 * Download the latest official workbook.
 	 */
 	const downloadResponse = await fetch(catalogue.data.url);
 
@@ -92,7 +103,9 @@ export async function syncBcaToDatabase(
 	const sheetName = workbook.SheetNames[0];
 
 	if (!sheetName) {
-		throw new Error('BCA dataset contains no worksheet.');
+		throw new Error(
+			'BCA dataset contains no worksheet.'
+		);
 	}
 
 	const rows =
@@ -107,27 +120,42 @@ export async function syncBcaToDatabase(
 		);
 	}
 
-	/*
-	 * The BCA workbook contains primary MCST records as well as
-	 * subsidiary-management-corporation records.
-	 *
-	 * The PDPC workflow is keyed to the primary MCST population.
-	 * A populated sub_mcno therefore does not create another primary
-	 * MCST lookup job.
-	 */
-	const recordsByMcst = new Map<string, McstRecord>();
+	const recordsByMcst =
+		new Map<string, McstRecord>();
 
 	for (const row of rows) {
+		/*
+		 * Ignore records explicitly identified by BCA as inactive.
+		 * A blank status is retained rather than silently discarded.
+		 */
 		const status = textValue(
-			value(row, 'ust_status', 'status')
+			value(
+				row,
+				'ust_status',
+				'status'
+			)
 		).toUpperCase();
 
 		if (status && status !== 'ACTIVE') {
 			continue;
 		}
 
+		/*
+		 * BCA includes subsidiary-management-corporation records in
+		 * the same source workbook.
+		 *
+		 * Crucially, ordinary primary MCST rows may contain "NA" in
+		 * sub_mcno. textValue() converts that placeholder to blank.
+		 *
+		 * Only a genuine subsidiary number causes the row to be
+		 * excluded from the primary MCST lookup population.
+		 */
 		const subMcst = textValue(
-			value(row, 'sub_mcno', 'submcno')
+			value(
+				row,
+				'sub_mcno',
+				'submcno'
+			)
 		);
 
 		if (subMcst) {
@@ -173,6 +201,10 @@ export async function syncBcaToDatabase(
 			)
 		);
 
+		/*
+		 * Primary MCST number is the canonical key for the PDPC
+		 * lookup queue.
+		 */
 		recordsByMcst.set(mcst, {
 			mcst_no: mcst,
 			estate_name: estate,
@@ -182,11 +214,12 @@ export async function syncBcaToDatabase(
 		});
 	}
 
-	const records = [...recordsByMcst.values()];
+	const records =
+		[...recordsByMcst.values()];
 
 	/*
-	 * Never destroy the existing BCA snapshot if the upstream
-	 * download/parsing unexpectedly produces no usable records.
+	 * Safety guard: never delete the existing D1 BCA snapshot if
+	 * upstream retrieval/parsing unexpectedly yields no usable data.
 	 */
 	if (!records.length) {
 		throw new Error(
@@ -195,14 +228,19 @@ export async function syncBcaToDatabase(
 	}
 
 	/*
-	 * Replace the previous BCA snapshot only after the new snapshot
-	 * has been successfully downloaded and validated.
+	 * Replace the BCA snapshot only after the new source has been
+	 * downloaded, parsed and validated successfully.
 	 */
 	await db
-		.prepare(`DELETE FROM mcst_records WHERE source='BCA'`)
+		.prepare(
+			`DELETE FROM mcst_records WHERE source='BCA'`
+		)
 		.run();
 
-	await upsertMcstRecords(db, records);
+	await upsertMcstRecords(
+		db,
+		records
+	);
 
 	await replaceLookupJobs(db);
 
