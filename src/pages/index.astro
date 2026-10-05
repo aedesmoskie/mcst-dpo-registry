@@ -18,9 +18,7 @@ export const prerender = false;
       color-scheme: dark;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -140,10 +138,7 @@ export const prerender = false;
 
     .lookup-grid {
       display: grid;
-      grid-template-columns:
-        140px
-        minmax(180px, 1fr)
-        minmax(220px, 1.5fr);
+      grid-template-columns: 140px minmax(180px, 1fr) minmax(220px, 1.5fr);
       gap: 12px;
       margin-bottom: 16px;
     }
@@ -156,40 +151,6 @@ export const prerender = false;
     }
 
     .fieldvalue {
-      margin-top: 6px;
-      font-size: 15px;
-      font-weight: 650;
-      word-break: break-word;
-    }
-
-    .search-context {
-      display: none;
-      background: #0c121c;
-      border: 1px solid #273244;
-      border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 16px;
-    }
-
-    .search-context.active {
-      display: block;
-    }
-
-    .search-context-grid {
-      display: grid;
-      grid-template-columns:
-        minmax(150px, .6fr)
-        minmax(260px, 2fr);
-      gap: 12px;
-    }
-
-    .search-method {
-      margin-top: 6px;
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    .search-value {
       margin-top: 6px;
       font-size: 15px;
       font-weight: 650;
@@ -224,12 +185,7 @@ export const prerender = false;
 
     .editor-row {
       display: grid;
-      grid-template-columns:
-        1.5fr
-        1fr
-        1.2fr
-        1.5fr
-        auto;
+      grid-template-columns: 1.5fr 1fr 1.2fr 1.5fr auto;
       gap: 8px;
       margin-bottom: 8px;
       align-items: center;
@@ -346,7 +302,6 @@ export const prerender = false;
       }
 
       .lookup-grid,
-      .search-context-grid,
       .editor-row {
         grid-template-columns: 1fr;
       }
@@ -367,107 +322,46 @@ export const prerender = false;
     </div>
 
     <div class="actions">
-      <button id="sync" class="primary">
-        Sync MCST Records
-      </button>
-
-      <button id="retry">
-        Retry Failed
-      </button>
-
-      <a
-        class="button"
-        href="/api/export.xlsx"
-      >
-        Export Excel
-      </a>
+      <button id="sync" class="primary">Sync MCST Records</button>
+      <button id="retry">Retry Failed</button>
+      <a class="button" href="/api/export.xlsx">Export Excel</a>
     </div>
   </div>
 
 
   <section class="cards">
-
     <div class="card">
-      <div class="label">
-        MCST population
-      </div>
-
-      <div
-        class="value"
-        id="total"
-      >
-        0
-      </div>
+      <div class="label">MCST population</div>
+      <div class="value" id="total">0</div>
     </div>
 
-
     <div class="card">
-      <div class="label">
-        Checked
-      </div>
-
-      <div
-        class="value"
-        id="checked"
-      >
-        0
-      </div>
+      <div class="label">Checked</div>
+      <div class="value" id="checked">0</div>
     </div>
 
-
     <div class="card">
-      <div class="label">
-        MCSTs with DPO
-      </div>
-
-      <div
-        class="value"
-        id="withDpo"
-      >
-        0
-      </div>
+      <div class="label">MCSTs with DPO</div>
+      <div class="value" id="withDpo">0</div>
     </div>
 
-
     <div class="card">
-      <div class="label">
-        DPO rows
-      </div>
-
-      <div
-        class="value"
-        id="dpoRows"
-      >
-        0
-      </div>
+      <div class="label">DPO rows</div>
+      <div class="value" id="dpoRows">0</div>
     </div>
 
-
     <div class="card">
-      <div class="label">
-        Discrepancies
-      </div>
-
-      <div
-        class="value"
-        id="discrepancies"
-      >
-        0
-      </div>
+      <div class="label">Discrepancies</div>
+      <div class="value" id="discrepancies">0</div>
     </div>
-
   </section>
 
 
   <section class="panel lookup">
 
     <div class="lookup-header">
-
       <div>
-        <h2>
-          PDPC Registry Lookup
-        </h2>
-
+        <h2>PDPC Registry Lookup</h2>
         <p>
           Review each MCST against the official PDPC registry.
         </p>
@@ -479,89 +373,32 @@ export const prerender = false;
       >
         No MCST selected
       </div>
-
     </div>
 
 
     <div class="lookup-grid">
-
       <div class="fieldbox">
-        <div class="label">
-          MCST#
-        </div>
-
+        <div class="label">MCST#</div>
         <div
           class="fieldvalue"
           id="lookupMcst"
-        >
-          —
-        </div>
+        >—</div>
       </div>
 
-
       <div class="fieldbox">
-        <div class="label">
-          UEN
-        </div>
-
+        <div class="label">UEN</div>
         <div
           class="fieldvalue"
           id="lookupUen"
-        >
-          —
-        </div>
+        >—</div>
       </div>
 
-
       <div class="fieldbox">
-        <div class="label">
-          Estate Name
-        </div>
-
+        <div class="label">Estate Name</div>
         <div
           class="fieldvalue"
           id="lookupEstate"
-        >
-          —
-        </div>
-      </div>
-
-    </div>
-
-
-    <div
-      class="search-context"
-      id="searchContext"
-    >
-      <div class="search-context-grid">
-
-        <div>
-          <div class="label">
-            Search Method
-          </div>
-
-          <div
-            class="search-method"
-            id="searchMethod"
-          >
-            —
-          </div>
-        </div>
-
-
-        <div>
-          <div class="label">
-            Search Value
-          </div>
-
-          <div
-            class="search-value"
-            id="searchValue"
-          >
-            —
-          </div>
-        </div>
-
+        >—</div>
       </div>
     </div>
 
@@ -575,7 +412,6 @@ export const prerender = false;
         Get Next MCST
       </button>
 
-
       <a
         id="openPdpc"
         class="button"
@@ -586,14 +422,12 @@ export const prerender = false;
         Open PDPC Registry
       </a>
 
-
       <button
         id="copySearchValue"
         disabled
       >
         Copy Search Value
       </button>
-
 
       <button
         id="tryEstate"
@@ -602,7 +436,6 @@ export const prerender = false;
         Try Estate Name
       </button>
 
-
       <button
         id="found"
         disabled
@@ -610,14 +443,12 @@ export const prerender = false;
         DPO Result Found
       </button>
 
-
       <button
         id="notFound"
         disabled
       >
         No Registry Result
       </button>
-
 
       <button
         id="verification"
@@ -629,10 +460,12 @@ export const prerender = false;
     </div>
 
 
-    <div class="instructions" id="lookupInstructions">
-      Select an MCST to begin. The lookup starts with the BCA UEN
-      whenever one is available. Complete any PDPC human verification
-      yourself on the official registry page.
+    <div class="instructions">
+      Search the PDPC Registry using the displayed UEN first. If that search
+      returns no result, use <strong>Try Estate Name</strong> and complete the
+      estate-name fallback before recording <strong>No Registry Result</strong>.
+      Complete any PDPC human verification yourself in the official registry.
+      A verification prompt is not a no-result outcome.
     </div>
 
 
@@ -650,7 +483,6 @@ export const prerender = false;
       ></div>
 
       <div class="editor-actions">
-
         <button id="addObservation">
           + Add DPO
         </button>
@@ -665,7 +497,6 @@ export const prerender = false;
         <button id="cancelFound">
           Cancel
         </button>
-
       </div>
     </div>
 
@@ -727,1179 +558,42 @@ export const prerender = false;
 
 
   <div class="note">
-    “DPO = N” means no registration was found after the completed
-    PDPC Registry lookup workflow. It does not establish that the
-    MCST has no appointed DPO outside the registry.
+    “DPO = N” means no registration was found in a completed PDPC
+    Registry lookup. It does not establish that the MCST has no
+    appointed DPO outside the registry.
   </div>
 
 </main>
 
 
 <script>
-  const $ = (id) =>
-    document.getElementById(id);
-
-
-  let currentJob = null;
-
-  let currentSearchType = null;
-
-  let currentSearchValue = '';
-
-  let uenSearchCompletedWithoutResult = false;
-
-  let searchTimer;
-
-
-  const esc = (value) =>
-    String(value ?? '')
-      .replace(
-        /[&<>"']/g,
-        (character) => ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;',
-        })[character],
-      );
-
-
-  function setStatus(message) {
-    $('status').textContent =
-      message;
-  }
-
-
-  function hasUen() {
-    return Boolean(
-      currentJob?.uen?.trim(),
-    );
-  }
-
-
-  function hasEstateName() {
-    return Boolean(
-      currentJob?.estateName?.trim(),
-    );
-  }
-
-
-  function setSearchMode(type) {
-    if (!currentJob) {
-      currentSearchType = null;
-      currentSearchValue = '';
-
-      renderSearchContext();
-      setLookupControls(false);
-
-      return;
-    }
-
-
-    if (
-      type === 'uen' &&
-      hasUen()
-    ) {
-      currentSearchType = 'uen';
-
-      currentSearchValue =
-        currentJob.uen.trim();
-    } else {
-      currentSearchType =
-        'estate_name';
-
-      currentSearchValue =
-        currentJob.estateName?.trim() ||
-        '';
-    }
-
-
-    renderSearchContext();
-
-    setLookupControls(true);
-  }
-
-
-  function renderSearchContext() {
-    const context =
-      $('searchContext');
-
-    if (
-      !currentJob ||
-      !currentSearchType
-    ) {
-      context
-        .classList
-        .remove('active');
-
-      $('searchMethod').textContent =
-        '—';
-
-      $('searchValue').textContent =
-        '—';
-
-      return;
-    }
-
-
-    context
-      .classList
-      .add('active');
-
-
-    $('searchMethod').textContent =
-      currentSearchType === 'uen'
-        ? 'UEN'
-        : 'Estate Name';
-
-
-    $('searchValue').textContent =
-      currentSearchValue || '—';
-
-
-    if (
-      currentSearchType === 'uen'
-    ) {
-      $('lookupInstructions')
-        .innerHTML =
-          'Search the official PDPC Registry using the displayed ' +
-          '<strong>UEN</strong>. Complete any PDPC human verification ' +
-          'yourself. If one or more records are returned, use ' +
-          '<strong>DPO Result Found</strong>. If the UEN search returns ' +
-          'no record, use <strong>Try Estate Name</strong> before ' +
-          'recording a final no-registry-result outcome.';
-    } else {
-      $('lookupInstructions')
-        .innerHTML =
-          'Search the official PDPC Registry using the displayed ' +
-          '<strong>Estate Name</strong>. Enter every returned DPO row ' +
-          'exactly as shown. If this completed fallback search also ' +
-          'returns no record, use <strong>No Registry Result</strong>.';
-    }
-  }
-
-
-  function setLookupControls(enabled) {
-    const active =
-      Boolean(
-        enabled &&
-        currentJob &&
-        currentSearchType &&
-        currentSearchValue,
-      );
-
-
-    $('copySearchValue').disabled =
-      !active;
-
-
-    $('found').disabled =
-      !active;
-
-
-    $('verification').disabled =
-      !active;
-
-
-    /*
-     * Estate-name fallback is available only after a UEN search
-     * produced no result.
-     */
-    $('tryEstate').disabled =
-      !(
-        active &&
-        currentSearchType === 'uen' &&
-        hasEstateName()
-      );
-
-
-    /*
-     * Final DPO=N is deliberately unavailable during the primary
-     * UEN search whenever an estate-name fallback exists.
-     *
-     * If there is no estate name to search, the completed UEN search
-     * is necessarily the only available registry search.
-     */
-    if (
-      currentSearchType === 'uen'
-    ) {
-      $('notFound').disabled =
-        !active ||
-        hasEstateName();
-    } else {
-      $('notFound').disabled =
-        !active;
-    }
-  }
-
-
-  function renderCurrentJob() {
-    $('lookupMcst').textContent =
-      currentJob?.mcstNo || '—';
-
-    $('lookupUen').textContent =
-      currentJob?.uen || '—';
-
-    $('lookupEstate').textContent =
-      currentJob?.estateName || '—';
-
-
-    if (!currentJob) {
-      $('lookupState').textContent =
-        'No MCST selected';
-
-      currentSearchType = null;
-
-      currentSearchValue = '';
-
-      uenSearchCompletedWithoutResult =
-        false;
-
-      renderSearchContext();
-
-      setLookupControls(false);
-
-      return;
-    }
-
-
-    $('lookupState').textContent =
-      'Awaiting PDPC result';
-
-
-    /*
-     * UEN is always the primary lookup key where BCA provides one.
-     * Otherwise begin directly with estate name.
-     */
-    if (hasUen()) {
-      setSearchMode('uen');
-    } else {
-      setSearchMode(
-        'estate_name',
-      );
-    }
-  }
-
-
-  function clearEditor() {
-    $('resultEditor')
-      .classList
-      .remove('active');
-
-    $('observationRows')
-      .innerHTML = '';
-  }
-
-
-  function addObservationRow(
-    observation = {},
-  ) {
-    const container =
-      $('observationRows');
-
-    const row =
-      document.createElement('div');
-
-    row.className =
-      'editor-row observation-row';
-
-
-    /*
-     * Only prefill the returned UEN when the active lookup itself
-     * was a UEN search.
-     *
-     * During estate-name fallback we leave the PDPC UEN field empty
-     * so the user records the value actually returned by PDPC rather
-     * than accidentally copying the BCA UEN.
-     */
-    const defaultReturnedUen =
-      observation.uen ??
-      (
-        currentSearchType === 'uen'
-          ? currentJob?.uen || ''
-          : ''
-      );
-
-
-    row.innerHTML = `
-      <input
-        class="organisation"
-        placeholder="PDPC Entity Name"
-        value="${esc(
-          observation.organisationName ||
-          ''
-        )}"
-      />
-
-      <input
-        class="observation-uen"
-        placeholder="Returned UEN"
-        value="${esc(
-          defaultReturnedUen
-        )}"
-      />
-
-      <input
-        class="dpo-name"
-        placeholder="DPO Name"
-        value="${esc(
-          observation.dpoName ||
-          ''
-        )}"
-      />
-
-      <input
-        class="dpo-email"
-        placeholder="DPO Email"
-        value="${esc(
-          observation.dpoEmail ||
-          ''
-        )}"
-      />
-
-      <button
-        type="button"
-        class="remove-observation danger"
-      >
-        Remove
-      </button>
-    `;
-
-
-    row
-      .querySelector(
-        '.remove-observation',
-      )
-      .addEventListener(
-        'click',
-        () => {
-          row.remove();
-
-          if (
-            !container.querySelector(
-              '.observation-row',
-            )
-          ) {
-            addObservationRow();
-          }
-        },
-      );
-
-
-    container.appendChild(row);
-  }
-
-
-  function collectObservations() {
-    return Array.from(
-      document.querySelectorAll(
-        '.observation-row',
-      ),
-    )
-      .map(
-        (row) => ({
-          organisationName:
-            row
-              .querySelector(
-                '.organisation',
-              )
-              .value
-              .trim(),
-
-          uen:
-            row
-              .querySelector(
-                '.observation-uen',
-              )
-              .value
-              .trim(),
-
-          dpoName:
-            row
-              .querySelector(
-                '.dpo-name',
-              )
-              .value
-              .trim(),
-
-          dpoEmail:
-            row
-              .querySelector(
-                '.dpo-email',
-              )
-              .value
-              .trim(),
-
-          dpoCompany: '',
-        }),
-      )
-      .filter(
-        (row) =>
-          row.organisationName ||
-          row.uen ||
-          row.dpoName ||
-          row.dpoEmail,
-      );
-  }
-
-
-  function renderRows(rows) {
-    const body =
-      $('rows');
-
-
-    if (!rows?.length) {
-      body.innerHTML =
-        '<tr><td colspan="8" class="empty">' +
-        'No matching records.' +
-        '</td></tr>';
-
-      return;
-    }
-
-
-    body.innerHTML =
-      rows
-        .map(
-          (row) => `
-            <tr>
-              <td>
-                ${esc(row['MCST#'])}
-              </td>
-
-              <td>
-                ${esc(row['Estate Name'])}
-              </td>
-
-              <td>
-                ${esc(row['UEN'])}
-              </td>
-
-              <td class="yes">
-                ${esc(row['DPO(Y/N)'])}
-              </td>
-
-              <td>
-                ${esc(row['DPO Name'])}
-              </td>
-
-              <td>
-                ${esc(row['DPO Email'])}
-              </td>
-
-              <td>
-                ${esc(row['DPO Company'])}
-              </td>
-
-              <td
-                class="${
-                  row[
-                    'Record Discrepancy(Y/N)'
-                  ] === 'Y'
-                    ? 'warn'
-                    : ''
-                }"
-              >
-                ${esc(
-                  row[
-                    'Record Discrepancy(Y/N)'
-                  ],
-                )}
-              </td>
-            </tr>
-          `,
-        )
-        .join('');
-  }
-
-
-  async function refreshStatus() {
-    const response =
-      await fetch(
-        '/api/status',
-        {
-          cache: 'no-store',
-        },
-      );
-
-    const data =
-      await response.json();
-
-
-    if (!data.ok) {
-      throw new Error(
-        data.error ||
-        'Status failed.',
-      );
-    }
-
-
-    $('total').textContent =
-      data.population.totalMcsts
-        .toLocaleString();
-
-    $('checked').textContent =
-      data.results.checkedMcsts
-        .toLocaleString();
-
-    $('withDpo').textContent =
-      data.results.mcstsWithDpo
-        .toLocaleString();
-
-    $('dpoRows').textContent =
-      data.results.dpoRows
-        .toLocaleString();
-
-    $('discrepancies').textContent =
-      data.results.discrepancies
-        .toLocaleString();
-
-
-    setStatus(
-      `${data.queue.completionPercent}% complete · ` +
-      `${data.queue.pending} pending · ` +
-      `${data.queue.failed} failed`,
-    );
-  }
-
-
-  async function loadRows() {
-    const response =
-      await fetch(
-        '/api/records',
-        {
-          cache: 'no-store',
-        },
-      );
-
-    const data =
-      await response.json();
-
-
-    if (!data.ok) {
-      throw new Error(
-        data.error ||
-        'Records failed.',
-      );
-    }
-
-
-    renderRows(
-      data.rows,
-    );
-  }
-
-
-  async function getNextLookup() {
-    clearEditor();
-
-    $('nextLookup').disabled =
-      true;
-
-
-    try {
-      setStatus(
-        'Loading next MCST…',
-      );
-
-
-      const response =
-        await fetch(
-          '/api/run-batch',
-          {
-            method: 'POST',
-
-            headers: {
-              'content-type':
-                'application/json',
-            },
-
-            body:
-              JSON.stringify({
-                batchSize: 1,
-              }),
-          },
-        );
-
-
-      const data =
-        await response.json();
-
-
-      if (!data.ok) {
-        throw new Error(
-          data.error ||
-          'Unable to obtain next MCST.',
-        );
-      }
-
-
-      if (!data.jobs?.length) {
-        currentJob = null;
-
-        renderCurrentJob();
-
-
-        setStatus(
-          data.done
-            ? 'All queued MCST lookups are complete.'
-            : 'No pending MCST is currently available.',
-        );
-
-        return;
-      }
-
-
-      currentJob =
-        data.jobs[0];
-
-      uenSearchCompletedWithoutResult =
-        false;
-
-      renderCurrentJob();
-
-
-      setStatus(
-        `Ready for PDPC lookup: MCST ${currentJob.mcstNo}`,
-      );
-    } catch (error) {
-      setStatus(
-        error.message ||
-        String(error),
-      );
-    } finally {
-      $('nextLookup').disabled =
-        false;
-    }
-  }
-
-
-  async function submitResult(
-    payload,
-  ) {
-    if (!currentJob) {
-      return;
-    }
-
-
-    const response =
-      await fetch(
-        '/api/submit-pdpc-result',
-        {
-          method: 'POST',
-
-          headers: {
-            'content-type':
-              'application/json',
-          },
-
-          body:
-            JSON.stringify({
-              mcstNo:
-                currentJob.mcstNo,
-
-              ...payload,
-            }),
-        },
-      );
-
-
-    const data =
-      await response.json();
-
-
-    if (!data.ok) {
-      throw new Error(
-        data.error ||
-        'Unable to save PDPC result.',
-      );
-    }
-
-
-    return data;
-  }
-
-
-  async function finishAndAdvance(
-    payload,
-  ) {
-    try {
-      setLookupControls(false);
-
-      setStatus(
-        'Saving PDPC result…',
-      );
-
-
-      await submitResult(
-        payload,
-      );
-
-
-      currentJob = null;
-
-      currentSearchType = null;
-
-      currentSearchValue = '';
-
-      uenSearchCompletedWithoutResult =
-        false;
-
-
-      renderCurrentJob();
-
-      clearEditor();
-
-
-      await Promise.all([
-        refreshStatus(),
-        loadRows(),
-      ]);
-
-
-      await getNextLookup();
-    } catch (error) {
-      setStatus(
-        error.message ||
-        String(error),
-      );
-
-      setLookupControls(
-        Boolean(currentJob),
-      );
-    }
-  }
-
-
-  $('sync').onclick =
-    async () => {
-      try {
-        $('sync').disabled =
-          true;
-
-        setStatus(
-          'Synchronising BCA…',
-        );
-
-
-        const response =
-          await fetch(
-            '/api/sync-bca',
-            {
-              method: 'POST',
-            },
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!data.ok) {
-          throw new Error(
-            data.error ||
-            'BCA synchronisation failed.',
-          );
-        }
-
-
-        currentJob = null;
-
-        currentSearchType = null;
-
-        currentSearchValue = '';
-
-        uenSearchCompletedWithoutResult =
-          false;
-
-
-        renderCurrentJob();
-
-        clearEditor();
-
-
-        await Promise.all([
-          refreshStatus(),
-          loadRows(),
-        ]);
-      } catch (error) {
-        setStatus(
-          error.message ||
-          String(error),
-        );
-      } finally {
-        $('sync').disabled =
-          false;
-      }
-    };
-
-
-  $('retry').onclick =
-    async () => {
-      try {
-        const response =
-          await fetch(
-            '/api/retry-failed',
-            {
-              method: 'POST',
-            },
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!data.ok) {
-          throw new Error(
-            data.error ||
-            'Retry failed.',
-          );
-        }
-
-
-        await refreshStatus();
-      } catch (error) {
-        setStatus(
-          error.message ||
-          String(error),
-        );
-      }
-    };
-
-
-  $('nextLookup').onclick =
-    getNextLookup;
-
-
-  $('copySearchValue').onclick =
-    async () => {
-      if (
-        !currentJob ||
-        !currentSearchValue
-      ) {
-        return;
-      }
-
-
-      try {
-        await navigator.clipboard.writeText(
-          currentSearchValue,
-        );
-
-
-        setStatus(
-          currentSearchType === 'uen'
-            ? `Copied UEN ${currentSearchValue}`
-            : 'Copied estate name.',
-        );
-      } catch {
-        setStatus(
-          'Unable to copy the search value to clipboard.',
-        );
-      }
-    };
-
-
-  /*
-   * A UEN search that produced no result is NOT written to D1 as
-   * DPO=N when an estate-name fallback is available.
-   *
-   * Instead, the same MCST remains active and the operator performs
-   * the second registry search.
-   */
-  $('tryEstate').onclick =
-    () => {
-      if (
-        !currentJob ||
-        currentSearchType !== 'uen' ||
-        !hasEstateName()
-      ) {
-        return;
-      }
-
-
-      uenSearchCompletedWithoutResult =
-        true;
-
-
-      clearEditor();
-
-      setSearchMode(
-        'estate_name',
-      );
-
-
-      $('lookupState').textContent =
-        'Estate-name fallback';
-
-
-      setStatus(
-        `UEN search returned no result. Search PDPC by estate name for MCST ${currentJob.mcstNo}.`,
-      );
-    };
-
-
-  $('found').onclick =
-    () => {
-      if (
-        !currentJob ||
-        !currentSearchType ||
-        !currentSearchValue
-      ) {
-        return;
-      }
-
-
-      $('observationRows')
-        .innerHTML = '';
-
-
-      addObservationRow({
-        uen:
-          currentSearchType === 'uen'
-            ? currentJob.uen
-            : '',
-      });
-
-
-      $('resultEditor')
-        .classList
-        .add('active');
-    };
-
-
-  $('addObservation').onclick =
-    () => {
-      addObservationRow({
-        uen:
-          currentSearchType === 'uen'
-            ? currentJob?.uen || ''
-            : '',
-      });
-    };
-
-
-  $('cancelFound').onclick =
-    clearEditor;
-
-
-  $('submitFound').onclick =
-    async () => {
-      if (
-        !currentJob ||
-        !currentSearchType ||
-        !currentSearchValue
-      ) {
-        return;
-      }
-
-
-      const observations =
-        collectObservations();
-
-
-      if (!observations.length) {
-        setStatus(
-          'Enter at least one PDPC DPO result.',
-        );
-
-        return;
-      }
-
-
-      await finishAndAdvance({
-        status:
-          'found',
-
-        searchType:
-          currentSearchType,
-
-        searchValue:
-          currentSearchValue,
-
-        observations,
-      });
-    };
-
-
-  $('notFound').onclick =
-    async () => {
-      if (
-        !currentJob ||
-        !currentSearchType ||
-        !currentSearchValue
-      ) {
-        return;
-      }
-
-
-      /*
-       * Defensive guard:
-       *
-       * The button should already be disabled during the primary
-       * UEN search when an estate-name fallback exists, but never
-       * rely solely on disabled UI state for this rule.
-       */
-      if (
-        currentSearchType === 'uen' &&
-        hasEstateName()
-      ) {
-        setStatus(
-          'Complete the Estate Name fallback before recording a final no-registry-result outcome.',
-        );
-
-        return;
-      }
-
-
-      const searchDescription =
-        currentSearchType === 'uen'
-          ? `UEN ${currentSearchValue}`
-          : `Estate Name "${currentSearchValue}"`;
-
-
-      const fallbackContext =
-        currentSearchType ===
-          'estate_name' &&
-        uenSearchCompletedWithoutResult
-          ? ' The earlier UEN search also returned no result.'
-          : '';
-
-
-      const confirmed =
-        window.confirm(
-          `Confirm that you completed the PDPC Registry search using ${searchDescription} and it returned no registry result.${fallbackContext}`,
-        );
-
-
-      if (!confirmed) {
-        return;
-      }
-
-
-      await finishAndAdvance({
-        status:
-          'not_found',
-
-        searchType:
-          currentSearchType,
-
-        searchValue:
-          currentSearchValue,
-      });
-    };
-
-
-  $('verification').onclick =
-    async () => {
-      if (!currentJob) {
-        return;
-      }
-
-
-      try {
-        await submitResult({
-          status:
-            'verification_required',
-
-          searchType:
-            currentSearchType,
-
-          searchValue:
-            currentSearchValue,
-        });
-
-
-        setStatus(
-          'Verification required. No DPO result was recorded.',
-        );
-      } catch (error) {
-        setStatus(
-          error.message ||
-          String(error),
-        );
-      }
-    };
-
-
-  $('search')
-    .addEventListener(
-      'input',
-      () => {
-        clearTimeout(
-          searchTimer,
-        );
-
-
-        searchTimer =
-          setTimeout(
-            async () => {
-              const query =
-                $('search')
-                  .value
-                  .trim();
-
-
-              if (!query) {
-                await loadRows();
-
-                return;
-              }
-
-
-              try {
-                const response =
-                  await fetch(
-                    '/api/search?q=' +
-                    encodeURIComponent(
-                      query,
-                    ),
-                  );
-
-
-                const data =
-                  await response.json();
-
-
-                if (!data.ok) {
-                  throw new Error(
-                    data.error ||
-                    'Search failed.',
-                  );
-                }
-
-
-                renderRows(
-                  data.rows,
-                );
-              } catch (error) {
-                setStatus(
-                  error.message ||
-                  String(error),
-                );
-              }
-            },
-            250,
-          );
-      },
-    );
-
-
-  renderCurrentJob();
-
-
-  Promise.all([
-    refreshStatus(),
-    loadRows(),
-  ]).catch(
-    (error) =>
-      setStatus(
-        error.message ||
-        String(error),
-      ),
-  );
+  const $=(id)=>document.getElementById(id); let currentJob=null,currentSearchType=null,currentSearchValue='',searchTimer;
+  const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  const setStatus=(m)=>{$('status').textContent=m;};
+  function setMode(type){if(!currentJob){currentSearchType=null;currentSearchValue='';return;}if(type==='uen'&&currentJob.uen){currentSearchType='uen';currentSearchValue=currentJob.uen;}else{currentSearchType='estate_name';currentSearchValue=currentJob.estateName||'';} $('lookupState').textContent=`Awaiting PDPC result · ${currentSearchType==='uen'?'UEN':'Estate Name'} search`; controls(true);}
+  function controls(on){const active=!!(on&&currentJob&&currentSearchValue);$('copySearchValue').disabled=!active;$('found').disabled=!active;$('verification').disabled=!active;$('tryEstate').disabled=!(active&&currentSearchType==='uen'&&currentJob.estateName);$('notFound').disabled=!(active&&(currentSearchType==='estate_name'||!currentJob.estateName));}
+  function renderJob(){$('lookupMcst').textContent=currentJob?.mcstNo||'—';$('lookupUen').textContent=currentJob?.uen||'—';$('lookupEstate').textContent=currentJob?.estateName||'—';if(!currentJob){$('lookupState').textContent='No MCST selected';currentSearchType=null;currentSearchValue='';controls(false);}else setMode(currentJob.uen?'uen':'estate_name');}
+  function clearEditor(){$('resultEditor').classList.remove('active');$('observationRows').innerHTML='';}
+  function addObservationRow(o={}){const c=$('observationRows'),r=document.createElement('div');r.className='editor-row observation-row';const defaultUen=o.uen??(currentSearchType==='uen'?currentJob?.uen||'':'');r.innerHTML=`<input class="organisation" placeholder="PDPC Entity Name" value="${esc(o.organisationName||'')}"/><input class="observation-uen" placeholder="Returned UEN" value="${esc(defaultUen)}"/><input class="dpo-name" placeholder="DPO Name" value="${esc(o.dpoName||'')}"/><input class="dpo-email" placeholder="DPO Email" value="${esc(o.dpoEmail||'')}"/><button type="button" class="remove-observation danger">Remove</button>`;r.querySelector('.remove-observation').onclick=()=>{r.remove();if(!c.querySelector('.observation-row'))addObservationRow();};c.appendChild(r);}
+  function collect(){return [...document.querySelectorAll('.observation-row')].map(r=>({organisationName:r.querySelector('.organisation').value.trim(),uen:r.querySelector('.observation-uen').value.trim(),dpoName:r.querySelector('.dpo-name').value.trim(),dpoEmail:r.querySelector('.dpo-email').value.trim(),dpoCompany:''})).filter(x=>x.organisationName||x.uen||x.dpoName||x.dpoEmail);}
+  function renderRows(rows){$('rows').innerHTML=rows?.length?rows.map(r=>`<tr><td>${esc(r['MCST#'])}</td><td>${esc(r['Estate Name'])}</td><td>${esc(r['UEN'])}</td><td class="yes">${esc(r['DPO(Y/N)'])}</td><td>${esc(r['DPO Name'])}</td><td>${esc(r['DPO Email'])}</td><td>${esc(r['DPO Company'])}</td><td class="${r['Record Discrepancy(Y/N)']==='Y'?'warn':''}">${esc(r['Record Discrepancy(Y/N)'])}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">No matching records.</td></tr>';}
+  async function refreshStatus(){const d=await (await fetch('/api/status',{cache:'no-store'})).json();if(!d.ok)throw Error(d.error||'Status failed.');$('total').textContent=d.population.totalMcsts.toLocaleString();$('checked').textContent=d.results.checkedMcsts.toLocaleString();$('withDpo').textContent=d.results.mcstsWithDpo.toLocaleString();$('dpoRows').textContent=d.results.dpoRows.toLocaleString();$('discrepancies').textContent=d.results.discrepancies.toLocaleString();setStatus(`${d.queue.completionPercent}% complete · ${d.queue.pending} pending · ${d.queue.failed} failed`);}
+  async function loadRows(){const d=await (await fetch('/api/records',{cache:'no-store'})).json();if(!d.ok)throw Error(d.error||'Records failed.');renderRows(d.rows);}
+  async function next(){clearEditor();$('nextLookup').disabled=true;try{const d=await (await fetch('/api/run-batch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({batchSize:1})})).json();if(!d.ok)throw Error(d.error);currentJob=d.jobs?.[0]||null;renderJob();setStatus(currentJob?`Ready for PDPC lookup: MCST ${currentJob.mcstNo}`:(d.done?'All queued MCST lookups are complete.':'No pending MCST is currently available.'));}catch(e){setStatus(e.message||String(e));}finally{$('nextLookup').disabled=false;}}
+  async function submit(payload){const d=await (await fetch('/api/submit-pdpc-result',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({mcstNo:currentJob.mcstNo,...payload})})).json();if(!d.ok)throw Error(d.error||'Unable to save PDPC result.');return d;}
+  async function finish(payload){try{controls(false);setStatus('Saving PDPC result…');await submit(payload);currentJob=null;renderJob();clearEditor();await Promise.all([refreshStatus(),loadRows()]);await next();}catch(e){setStatus(e.message||String(e));controls(true);}}
+  $('nextLookup').onclick=next;
+  $('copySearchValue').onclick=async()=>{if(!currentSearchValue)return;try{await navigator.clipboard.writeText(currentSearchValue);setStatus(`Copied ${currentSearchType==='uen'?'UEN':'estate name'}: ${currentSearchValue}`);}catch{setStatus('Unable to copy search value.');}};
+  $('tryEstate').onclick=()=>{if(!currentJob?.estateName)return;clearEditor();setMode('estate_name');setStatus(`UEN search returned no result. Search PDPC by estate name for MCST ${currentJob.mcstNo}.`);};
+  $('found').onclick=()=>{$('observationRows').innerHTML='';addObservationRow();$('resultEditor').classList.add('active');};
+  $('addObservation').onclick=()=>addObservationRow(); $('cancelFound').onclick=clearEditor;
+  $('submitFound').onclick=async()=>{const observations=collect();if(!observations.length)return setStatus('Enter at least one PDPC DPO result.');await finish({status:'found',searchType:currentSearchType,searchValue:currentSearchValue,observations});};
+  $('notFound').onclick=async()=>{if(currentSearchType==='uen'&&currentJob?.estateName)return setStatus('Complete the Estate Name fallback before recording No Registry Result.');if(!confirm(`Confirm the completed PDPC ${currentSearchType==='uen'?'UEN':'Estate Name'} search returned no registry result.`))return;await finish({status:'not_found',searchType:currentSearchType,searchValue:currentSearchValue});};
+  $('verification').onclick=async()=>{try{await submit({status:'verification_required',searchType:currentSearchType,searchValue:currentSearchValue});setStatus('Verification required. No DPO result was recorded.');}catch(e){setStatus(e.message||String(e));}};
+  $('sync').onclick=async()=>{try{$('sync').disabled=true;setStatus('Synchronising BCA…');const d=await (await fetch('/api/sync-bca',{method:'POST'})).json();if(!d.ok)throw Error(d.error);currentJob=null;renderJob();clearEditor();await Promise.all([refreshStatus(),loadRows()]);}catch(e){setStatus(e.message||String(e));}finally{$('sync').disabled=false;}};
+  $('retry').onclick=async()=>{try{const d=await (await fetch('/api/retry-failed',{method:'POST'})).json();if(!d.ok)throw Error(d.error);await refreshStatus();}catch(e){setStatus(e.message||String(e));}};
+  $('search').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(async()=>{const q=$('search').value.trim();if(!q)return loadRows();try{const d=await (await fetch('/api/search?q='+encodeURIComponent(q))).json();if(!d.ok)throw Error(d.error);renderRows(d.rows);}catch(e){setStatus(e.message||String(e));}},250);});
+  renderJob();Promise.all([refreshStatus(),loadRows()]).catch(e=>setStatus(e.message||String(e)));
 </script>
 
 </body>
