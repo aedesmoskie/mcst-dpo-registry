@@ -11,6 +11,9 @@ export const prerender = false;
 const DEFAULT_BATCH_SIZE = 1;
 const MAX_BATCH_SIZE = 10;
 
+const PDPC_REGISTRY_URL =
+	'https://www.pdpc.gov.sg/individuals/e-services/data-protection-officers-dpo-registry';
+
 
 /**
  * Returns the next pending MCST records that require a PDPC lookup.
@@ -19,8 +22,8 @@ const MAX_BATCH_SIZE = 10;
  * website.
  *
  * The actual PDPC lookup is performed through the assisted workflow
- * in the user's normal browser. A separate submission endpoint will
- * validate and persist the observed PDPC result.
+ * in the user's normal browser. The submission endpoint validates
+ * and persists the observed PDPC result.
  */
 export const POST: APIRoute =
 	async ({ request, locals }) => {
@@ -34,6 +37,7 @@ export const POST: APIRoute =
 				return Response.json(
 					{
 						ok: false,
+
 						error:
 							'D1 binding DB is not available.',
 					},
@@ -95,16 +99,29 @@ export const POST: APIRoute =
 				);
 
 
+			/*
+			 * A queue is complete only when every job has completed.
+			 *
+			 * Failed jobs are intentionally excluded from
+			 * getNextLookupJobs() until the operator explicitly
+			 * retries them, so they must be considered here.
+			 */
+			const done =
+				progress.total > 0 &&
+				progress.pending === 0 &&
+				progress.processing === 0 &&
+				progress.failed === 0 &&
+				progress.completed ===
+					progress.total;
+
+
 			if (jobs.length === 0) {
 				return Response.json({
 					ok: true,
 
 					jobs: [],
 
-					done:
-						progress.total > 0 &&
-						progress.pending === 0 &&
-						progress.processing === 0,
+					done,
 
 					progress,
 				});
@@ -131,7 +148,7 @@ export const POST: APIRoute =
 								job.source,
 
 							pdpcRegistryUrl:
-								'https://www.pdpc.gov.sg/individuals/e-services/data-protection-officers-dpo-registry',
+								PDPC_REGISTRY_URL,
 						}),
 					),
 
