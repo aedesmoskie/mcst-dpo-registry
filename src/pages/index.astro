@@ -1,50 +1,252 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+const title = 'MCST DPO Registry Research';
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="color-scheme" content="dark" />
+		<meta
+			name="description"
+			content="Singapore MCST DPO Registry research and reconciliation tool"
+		/>
+		<title>{title}</title>
+
+		<style>
+			:root {
+				font-family:
+					Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+					"Segoe UI", sans-serif;
+				color: #e8edf5;
+				background: #0b0e13;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				margin: 0;
+				background: #0b0e13;
+				color: #e8edf5;
+			}
+
+			main {
+				max-width: 1500px;
+				margin: 0 auto;
+				padding: 36px 28px 60px;
+			}
+
+			h1 {
+				margin: 0;
+				font-size: 30px;
+				letter-spacing: -0.02em;
+			}
+
+			.sub {
+				color: #9aa6b6;
+				margin: 8px 0 28px;
+			}
+
+			.toolbar {
+				display: flex;
+				gap: 10px;
+				flex-wrap: wrap;
+				align-items: center;
+				margin-bottom: 20px;
+			}
+
+			button,
+			a.button {
+				border: 1px solid #2a3443;
+				background: #151b24;
+				color: #f5f7fa;
+				padding: 10px 14px;
+				border-radius: 9px;
+				font-weight: 650;
+				text-decoration: none;
+				cursor: pointer;
+			}
+
+			button:hover,
+			a.button:hover {
+				background: #1c2531;
+			}
+
+			.primary {
+				background: #f3f6fa;
+				color: #11161d;
+				border-color: #f3f6fa;
+			}
+
+			.primary:hover {
+				background: #dce3eb;
+			}
+
+			.status {
+				color: #aab6c6;
+				min-height: 22px;
+				margin: 8px 0 18px;
+			}
+
+			.stats {
+				display: grid;
+				grid-template-columns: repeat(4, minmax(0, 1fr));
+				gap: 12px;
+				margin: 20px 0;
+			}
+
+			.card {
+				background: #11161d;
+				border: 1px solid #232c38;
+				border-radius: 12px;
+				padding: 16px;
+			}
+
+			.label {
+				color: #8f9aaa;
+				font-size: 12px;
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+			}
+
+			.value {
+				font-size: 24px;
+				font-weight: 720;
+				margin-top: 6px;
+			}
+
+			.tablewrap {
+				overflow: auto;
+				border: 1px solid #232c38;
+				border-radius: 12px;
+				background: #10151c;
+				max-height: 68vh;
+			}
+
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				min-width: 1120px;
+			}
+
+			th {
+				position: sticky;
+				top: 0;
+				background: #151b24;
+				text-align: left;
+				font-size: 12px;
+				color: #aeb8c5;
+				padding: 11px 12px;
+				border-bottom: 1px solid #2b3542;
+				white-space: nowrap;
+			}
+
+			td {
+				padding: 10px 12px;
+				border-bottom: 1px solid #1e2631;
+				font-size: 13px;
+				vertical-align: top;
+			}
+
+			.muted {
+				color: #758195;
+			}
+
+			.note {
+				margin-top: 16px;
+				color: #7f8b9c;
+				font-size: 12px;
+				line-height: 1.5;
+			}
+
+			@media (max-width: 800px) {
+				.stats {
+					grid-template-columns: repeat(2, 1fr);
+				}
+
+				main {
+					padding: 24px 14px;
+				}
+			}
+		</style>
 	</head>
+
 	<body>
-		<Header />
 		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
+			<h1>{title}</h1>
+
+			<p class="sub">
+				Singapore MCST master population and PDPC DPO Registry research,
+				reconciliation and Excel export.
 			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to <a href="https://docs.astro.build/"
-					>read the docs
-				</a> or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out <a
-					href="https://github.com/Charca/astro-blog-template"
-					>astro-blog-template
-				</a> by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
+
+			<div class="toolbar">
+				<button disabled>Sync MCST Records</button>
+				<button disabled>Check PDPC Registry</button>
+				<button class="primary" disabled>Run DPO Lookup</button>
+				<button disabled>Stop</button>
+				<button disabled>Export Excel</button>
+			</div>
+
+			<div class="status">
+				Application ready. Data services have not yet been configured.
+			</div>
+
+			<section class="stats">
+				<div class="card">
+					<div class="label">MCST Records</div>
+					<div class="value">0</div>
+				</div>
+
+				<div class="card">
+					<div class="label">DPO Found</div>
+					<div class="value">0</div>
+				</div>
+
+				<div class="card">
+					<div class="label">DPO Not Found</div>
+					<div class="value">0</div>
+				</div>
+
+				<div class="card">
+					<div class="label">Record Discrepancies</div>
+					<div class="value">0</div>
+				</div>
+			</section>
+
+			<div class="tablewrap">
+				<table>
+					<thead>
+						<tr>
+							<th>MCST#</th>
+							<th>Estate Name</th>
+							<th>UEN</th>
+							<th>DPO(Y/N)</th>
+							<th>DPO Name</th>
+							<th>DPO Email</th>
+							<th>DPO Company</th>
+							<th>Record Discrepancy(Y/N)</th>
+						</tr>
+					</thead>
+
+					<tbody>
+						<tr>
+							<td colspan="8" class="muted">
+								No MCST records loaded.
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<p class="note">
+				Multiple DPOs for the same MCST will be retained as separate rows.
+				Conflicting estate or organisation records will also be retained
+				separately and flagged under Record Discrepancy.
 			</p>
 		</main>
-		<Footer />
 	</body>
 </html>
