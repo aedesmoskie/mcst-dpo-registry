@@ -6,7 +6,7 @@ import type {
 
 import {
 	cleanSourceText,
-	hasNameDiscrepancy,
+	compareIdentity,
 	normaliseMcstNumber,
 	normaliseUen,
 } from './normalise';
@@ -19,7 +19,9 @@ export async function upsertMcstRecord(
 	const mcstNo = normaliseMcstNumber(record.mcst_no);
 
 	if (!mcstNo) {
-		throw new Error('Cannot store MCST record without a valid MCST number.');
+		throw new Error(
+			'Cannot store MCST record without a valid MCST number.',
+		);
 	}
 
 	const estateName = cleanSourceText(record.estate_name);
@@ -85,7 +87,10 @@ export async function getNextLookupJobs(
 	db: D1Database,
 	limit = 3,
 ): Promise<McstRecord[]> {
-	const safeLimit = Math.max(1, Math.min(limit, 10));
+	const safeLimit = Math.max(
+		1,
+		Math.min(limit, 10),
+	);
 
 	const result = await db
 		.prepare(`
@@ -101,7 +106,9 @@ export async function getNextLookupJobs(
 				ON m.mcst_no = j.mcst_no
 				AND m.source = 'BCA'
 			WHERE j.status IN ('pending', 'failed')
-			ORDER BY CAST(m.mcst_no AS INTEGER), m.id
+			ORDER BY
+				CAST(m.mcst_no AS INTEGER),
+				m.id
 			LIMIT ?
 		`)
 		.bind(safeLimit)
@@ -185,6 +192,16 @@ export async function clearExistingDpoResults(
 }
 
 
+/**
+ * Records that the PDPC registry returned no DPO result.
+ *
+ * This means only:
+ *
+ * "No DPO registration was found in the PDPC registry during this lookup."
+ *
+ * It must NOT be interpreted as proof that the MCST has not appointed
+ * a DPO through some other mechanism.
+ */
 export async function saveNoDpoResult(
 	db: D1Database,
 	record: McstRecord,
@@ -208,7 +225,13 @@ export async function saveNoDpoResult(
 				checked_at,
 				updated_at
 			)
-			VALUES (?, ?, ?, 0, '', '', '', '', 0, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+			VALUES (
+				?, ?, ?, 0,
+				'', '', '', '',
+				0, ?, ?,
+				CURRENT_TIMESTAMP,
+				CURRENT_TIMESTAMP
+			)
 		`)
 		.bind(
 			normaliseMcstNumber(record.mcst_no),
@@ -221,6 +244,11 @@ export async function saveNoDpoResult(
 }
 
 
+/**
+ * Saves every PDPC DPO observation independently.
+ *
+ * Multiple DPOs for the same UEN therefore become multiple output rows.
+ */
 export async function saveDpoObservations(
 	db: D1Database,
 	record: McstRecord,
@@ -228,60 +256,73 @@ export async function saveDpoObservations(
 	lookupStatus: string,
 	lookupMethod: string,
 ): Promise<void> {
-	const mcstNo = normaliseMcstNumber(record.mcst_no);
-	const bcaEstate = cleanSourceText(record.estate_name);
-	const uen = normaliseUen(record.uen);
+	const mcstNo =
+		normaliseMcstNumber(record.mcst_no);
+
+	const bcaUen =
+		normaliseUen(record.uen);
+
+	const bcaEstate =
+		cleanSourceText(record.estate_name);
 
 	for (const observation of observations) {
-		const pdpcName = cleanSourceText(
-			observation.organisationName,
-		);
+		const pdpcUen =
+			normaliseUen(observation.uen);
 
-		const discrepancy = hasNameDiscrepancy(
-			bcaEstate,
-			pdpcName,
-		);
+		const pdpcName =
+			cleanSourceText(
+				observation.organisationName,
+			);
+
+		const identity = compareIdentity({
+			bcaMcstNo: mcstNo,
+			bcaUen,
+			bcaEstateName: bcaEstate,
+			pdpcUen,
+			pdpcEntityName: pdpcName,
+		});
 
 		/*
-		 * Preserve the BCA estate-name row.
+		 * The canonical output UEN remains the BCA UEN where available.
+		 *
+		 * If BCA has no UEN, retain the UEN returned by PDPC.
 		 */
-		await insertDpoRow(
-			db,
-			{
-				mcstNo,
-				uen,
-				estateName: bcaEstate,
-				observation,
-				pdpcName,
-				discrepancy,
-				lookupStatus,
-				lookupMethod,
-			},
-		);
+		const outputUen =
+			bcaUen || pdpcUen;
+
+		await insertDpoRow(db, {
+			mcstNo,
+			uen: outputUen,
+			estateName: bcaEstate,
+			observation,
+			pdpcName,
+			discrepancy: identity.discrepancy,
+			lookupStatus,
+			lookupMethod,
+		});
+
 
 		/*
-		 * If PDPC reports a materially different organisation/estate name,
-		 * preserve that name as a separate output row rather than replacing
-		 * or silently reconciling the BCA value.
+		 * A genuine identity conflict is preserved visibly.
+		 *
+		 * If PDPC points to a conflicting identity/name, create an
+		 * additional row rather than silently overwriting BCA data.
 		 */
 		if (
-			discrepancy &&
+			identity.discrepancy &&
 			pdpcName &&
 			pdpcName !== bcaEstate
 		) {
-			await insertDpoRow(
-				db,
-				{
-					mcstNo,
-					uen,
-					estateName: pdpcName,
-					observation,
-					pdpcName,
-					discrepancy: true,
-					lookupStatus,
-					lookupMethod,
-				},
-			);
+			await insertDpoRow(db, {
+				mcstNo,
+				uen: pdpcUen || outputUen,
+				estateName: pdpcName,
+				observation,
+				pdpcName,
+				discrepancy: true,
+				lookupStatus,
+				lookupMethod,
+			});
 		}
 	}
 }
@@ -320,15 +361,34 @@ async function insertDpoRow(
 				checked_at,
 				updated_at
 			)
-			VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+			VALUES (
+				?, ?, ?, 1,
+				?, ?, ?, ?,
+				?, ?, ?,
+				CURRENT_TIMESTAMP,
+				CURRENT_TIMESTAMP
+			)
 		`)
 		.bind(
 			args.mcstNo,
 			args.uen,
 			args.estateName,
-			cleanSourceText(args.observation.dpoName),
-			cleanSourceText(args.observation.dpoEmail),
-			cleanSourceText(args.observation.dpoCompany),
+			cleanSourceText(
+				args.observation.dpoName,
+			),
+			cleanSourceText(
+				args.observation.dpoEmail,
+			),
+
+			/*
+			 * Do not infer a company from the DPO's email domain.
+			 * PDPC does not expose a separate company field in the
+			 * registry result shown to us.
+			 */
+			cleanSourceText(
+				args.observation.dpoCompany,
+			),
+
 			args.pdpcName,
 			args.discrepancy ? 1 : 0,
 			args.lookupStatus,
@@ -370,17 +430,35 @@ export async function getOutputRows(
 			record_discrepancy: number;
 		}>();
 
-	return (result.results ?? []).map((row) => ({
-		'MCST#': row.mcst_no ?? '',
-		'Estate Name': row.estate_name ?? '',
-		'UEN': row.uen ?? '',
-		'DPO(Y/N)': row.dpo_found ? 'Y' : 'N',
-		'DPO Name': row.dpo_name ?? '',
-		'DPO Email': row.dpo_email ?? '',
-		'DPO Company': row.dpo_company ?? '',
-		'Record Discrepancy(Y/N)':
-			row.record_discrepancy ? 'Y' : 'N',
-	}));
+	return (result.results ?? []).map(
+		(row) => ({
+			'MCST#':
+				row.mcst_no ?? '',
+
+			'Estate Name':
+				row.estate_name ?? '',
+
+			'UEN':
+				row.uen ?? '',
+
+			'DPO(Y/N)':
+				row.dpo_found ? 'Y' : 'N',
+
+			'DPO Name':
+				row.dpo_name ?? '',
+
+			'DPO Email':
+				row.dpo_email ?? '',
+
+			'DPO Company':
+				row.dpo_company ?? '',
+
+			'Record Discrepancy(Y/N)':
+				row.record_discrepancy
+					? 'Y'
+					: 'N',
+		}),
+	);
 }
 
 
@@ -397,10 +475,39 @@ export async function getLookupProgress(
 		.prepare(`
 			SELECT
 				COUNT(*) AS total,
-				SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending,
-				SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) AS processing,
-				SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed,
-				SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed
+
+				SUM(
+					CASE
+						WHEN status = 'pending'
+						THEN 1
+						ELSE 0
+					END
+				) AS pending,
+
+				SUM(
+					CASE
+						WHEN status = 'processing'
+						THEN 1
+						ELSE 0
+					END
+				) AS processing,
+
+				SUM(
+					CASE
+						WHEN status = 'completed'
+						THEN 1
+						ELSE 0
+					END
+				) AS completed,
+
+				SUM(
+					CASE
+						WHEN status = 'failed'
+						THEN 1
+						ELSE 0
+					END
+				) AS failed
+
 			FROM lookup_jobs
 		`)
 		.first<{
@@ -414,8 +521,10 @@ export async function getLookupProgress(
 	return {
 		total: Number(result?.total ?? 0),
 		pending: Number(result?.pending ?? 0),
-		processing: Number(result?.processing ?? 0),
-		completed: Number(result?.completed ?? 0),
+		processing:
+			Number(result?.processing ?? 0),
+		completed:
+			Number(result?.completed ?? 0),
 		failed: Number(result?.failed ?? 0),
 	};
 }
