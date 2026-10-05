@@ -29,9 +29,34 @@ export interface DpoRecord {
 }
 
 export interface DpoObservation {
+	/**
+	 * Entity name exactly as returned by PDPC.
+	 */
 	organisationName: string;
+
+	/**
+	 * UEN exactly as returned by PDPC.
+	 *
+	 * This is retained independently from the BCA UEN so the two
+	 * identifiers can be reconciled rather than assumed to match.
+	 */
+	uen: string;
+
+	/**
+	 * DPO name exactly as returned by PDPC.
+	 */
 	dpoName: string;
+
+	/**
+	 * Public DPO business email returned by PDPC.
+	 */
 	dpoEmail: string;
+
+	/**
+	 * PDPC currently does not expose a separate DPO-company field
+	 * in the registry results. Keep this blank unless an
+	 * authoritative source explicitly provides it.
+	 */
 	dpoCompany: string;
 }
 
