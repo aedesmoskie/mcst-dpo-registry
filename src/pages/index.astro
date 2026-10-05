@@ -1,5 +1,11 @@
 ---
 export const prerender = false;
+
+const user = (Astro.locals as any).user as
+	| { email: string; role: 'admin' | 'editor' | 'viewer' }
+	| undefined;
+
+const isAdmin = user?.role === 'admin';
 ---
 
 <!doctype html>
@@ -99,6 +105,26 @@ export const prerender = false;
 			gap: 20px;
 			padding-bottom: 20px;
 			border-bottom: 1px solid var(--border);
+		}
+
+		.account {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			min-width: 0;
+		}
+
+		.account-email {
+			max-width: 280px;
+			overflow: hidden;
+			color: var(--muted);
+			font-size: 12px;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		[hidden] {
+			display: none !important;
 		}
 
 		h1 {
@@ -789,6 +815,31 @@ export const prerender = false;
 			<div class="content">
 				<div class="title-row">
 					<h1>MCST DPO Registry</h1>
+
+					<div class="account">
+						<span class="account-email" title={user?.email ?? ''}>
+							{user?.email ?? ''}
+						</span>
+
+						<button
+							id="logout"
+							class="icon-button tooltip"
+							type="button"
+							data-tooltip="Log out"
+							aria-label="Log out"
+						>
+							<svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.8"
+							>
+								<path d="M10 5H5v14h5" />
+								<path d="M14 8l4 4-4 4" />
+								<path d="M18 12H9" />
+							</svg>
+						</button>
+					</div>
 				</div>
 
 				<div class="assistant-row">
@@ -832,6 +883,7 @@ export const prerender = false;
 
 					<button
 						id="sync"
+						hidden={!isAdmin}
 						class="icon-button tooltip"
 						type="button"
 						data-tooltip="Synchronise MCST records"
@@ -2527,6 +2579,23 @@ export const prerender = false;
 				}
 			}
 		);
+
+		$('logout').onclick =
+			async () => {
+				$('logout').disabled = true;
+
+				try {
+					await fetch(
+						'/api/auth/logout',
+						{
+							method: 'POST',
+							cache: 'no-store'
+						}
+					);
+				} finally {
+					window.location.replace('/login');
+				}
+			};
 
 		$('sync').onclick =
 			() => {
