@@ -5,643 +5,2823 @@ export const prerender = false;
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width" />
-  <title>MCST DPO Registry Research</title>
+	<meta charset="UTF-8" />
+	<meta
+		name="viewport"
+		content="width=device-width, initial-scale=1"
+	/>
 
-  <style>
-    :root {
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
-        BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #e8edf5;
-      background: #090d14;
-      color-scheme: dark;
-    }
+	<title>MCST DPO Registry</title>
 
-    * { box-sizing: border-box; }
+	<style>
+		:root {
+			font-family:
+				Inter,
+				ui-sans-serif,
+				system-ui,
+				-apple-system,
+				BlinkMacSystemFont,
+				"Segoe UI",
+				sans-serif;
 
-    body {
-      margin: 0;
-      background: #090d14;
-    }
+			color: #e8eef7;
+			background: #07111f;
+			color-scheme: dark;
 
-    .shell {
-      max-width: 1500px;
-      margin: auto;
-      padding: 32px;
-    }
+			--background: #07111f;
+			--sidebar: #081525;
+			--surface: #0d1b2c;
+			--surface-raised: #102238;
+			--surface-soft: #0a1727;
+			--border: rgba(148, 174, 207, 0.14);
+			--border-strong: rgba(148, 174, 207, 0.24);
+			--text: #e8eef7;
+			--muted: #8fa0b5;
+			--muted-2: #64768c;
+			--accent: #16b8d4;
+			--accent-soft: rgba(22, 184, 212, 0.12);
+			--success: #28d17c;
+			--warning: #f1b84b;
+			--danger: #ef6262;
+			--shadow: 0 18px 60px rgba(0, 0, 0, 0.2);
+		}
 
-    .top {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      align-items: flex-start;
-      margin-bottom: 28px;
-    }
+		* {
+			box-sizing: border-box;
+		}
 
-    h1 {
-      font-size: 28px;
-      margin: 0 0 8px;
-    }
+		html,
+		body {
+			margin: 0;
+			min-height: 100%;
+			background:
+				radial-gradient(
+					circle at 70% -20%,
+					rgba(24, 114, 148, 0.15),
+					transparent 38%
+				),
+				var(--background);
+		}
 
-    h2 {
-      margin: 0 0 6px;
-      font-size: 19px;
-    }
+		body {
+			min-height: 100vh;
+		}
 
-    p {
-      margin: 0;
-      color: #93a0b5;
-    }
+		button,
+		input,
+		select {
+			font: inherit;
+		}
 
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+		button {
+			color: inherit;
+		}
 
-    button,
-    a.button {
-      border: 1px solid #283244;
-      background: #151c28;
-      color: #edf2fa;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-weight: 650;
-      text-decoration: none;
-      cursor: pointer;
-      font: inherit;
-    }
+		.app {
+			display: grid;
+			grid-template-columns: 228px minmax(0, 1fr);
+			min-height: 100vh;
+		}
 
-    button.primary {
-      background: #edf2fa;
-      color: #0b1018;
-    }
+		.sidebar {
+			position: sticky;
+			top: 0;
+			height: 100vh;
+			padding: 24px 18px;
+			background:
+				linear-gradient(
+					180deg,
+					rgba(13, 34, 54, 0.96),
+					rgba(7, 19, 33, 0.98)
+				);
+			border-right: 1px solid var(--border);
+		}
 
-    button.danger {
-      border-color: #6c3b3b;
-    }
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 11px;
+			padding: 0 10px 24px;
+			border-bottom: 1px solid var(--border);
+		}
 
-    button:disabled {
-      opacity: .45;
-      cursor: not-allowed;
-    }
+		.brand-mark {
+			display: grid;
+			place-items: center;
+			width: 32px;
+			height: 32px;
+			border: 1px solid rgba(49, 207, 231, 0.45);
+			border-radius: 9px;
+			background: rgba(20, 177, 204, 0.1);
+			color: #38d5e9;
+		}
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(150px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
+		.brand-copy strong {
+			display: block;
+			font-size: 14px;
+			letter-spacing: 0.14em;
+		}
 
-    .card,
-    .panel {
-      background: #101620;
-      border: 1px solid #222c3b;
-      border-radius: 10px;
-    }
+		.brand-copy span {
+			display: block;
+			margin-top: 3px;
+			color: var(--muted-2);
+			font-size: 9px;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+		}
 
-    .card {
-      padding: 16px;
-    }
+		.nav {
+			display: grid;
+			gap: 6px;
+			margin-top: 24px;
+		}
 
-    .label {
-      font-size: 12px;
-      color: #8290a5;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
+		.nav-item {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			width: 100%;
+			min-height: 42px;
+			padding: 0 12px;
+			border: 0;
+			border-radius: 8px;
+			background: transparent;
+			color: #8091a6;
+			text-align: left;
+			cursor: default;
+		}
 
-    .value {
-      font-size: 26px;
-      font-weight: 700;
-      margin-top: 7px;
-    }
+		.nav-item.active {
+			background:
+				linear-gradient(
+					90deg,
+					rgba(22, 184, 212, 0.16),
+					rgba(22, 184, 212, 0.04)
+				);
+			color: #31cfe7;
+		}
 
-    .lookup {
-      padding: 20px;
-      margin-bottom: 20px;
-    }
+		.nav-icon {
+			width: 18px;
+			height: 18px;
+			flex: 0 0 auto;
+		}
 
-    .lookup-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      align-items: flex-start;
-      margin-bottom: 18px;
-    }
+		.sidebar-footer {
+			position: absolute;
+			right: 18px;
+			bottom: 22px;
+			left: 18px;
+			padding-top: 18px;
+			border-top: 1px solid var(--border);
+			color: var(--muted-2);
+			font-size: 11px;
+		}
 
-    .lookup-state {
-      font-size: 13px;
-      color: #9aa7ba;
-    }
+		.main {
+			min-width: 0;
+			padding: 28px 32px 40px;
+		}
 
-    .lookup-grid {
-      display: grid;
-      grid-template-columns: 140px minmax(180px, 1fr) minmax(220px, 1.5fr);
-      gap: 12px;
-      margin-bottom: 16px;
-    }
+		.content {
+			max-width: 1540px;
+			margin: 0 auto;
+		}
 
-    .fieldbox {
-      background: #090d14;
-      border: 1px solid #273244;
-      border-radius: 8px;
-      padding: 12px;
-    }
+		.breadcrumb {
+			margin-bottom: 15px;
+			color: #70839a;
+			font-size: 12px;
+		}
 
-    .fieldvalue {
-      margin-top: 6px;
-      font-size: 15px;
-      font-weight: 650;
-      word-break: break-word;
-    }
+		.breadcrumb span {
+			color: #b5c3d4;
+		}
 
-    .workflow-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 18px;
-    }
+		.title-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 20px;
+			padding-bottom: 20px;
+			border-bottom: 1px solid var(--border);
+		}
 
-    .instructions {
-      border-top: 1px solid #222c3b;
-      padding-top: 16px;
-      color: #8e9caf;
-      font-size: 13px;
-      line-height: 1.6;
-    }
+		h1 {
+			margin: 0;
+			font-size: clamp(26px, 2.3vw, 36px);
+			font-weight: 700;
+			letter-spacing: -0.035em;
+		}
 
-    .result-editor {
-      display: none;
-      border-top: 1px solid #222c3b;
-      padding-top: 18px;
-      margin-top: 18px;
-    }
+		h2 {
+			margin: 0;
+			font-size: 18px;
+			font-weight: 650;
+			letter-spacing: -0.015em;
+		}
 
-    .result-editor.active {
-      display: block;
-    }
+		.assistant-row {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-top: 20px;
+		}
 
-    .editor-row {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr 1.2fr 1.5fr auto;
-      gap: 8px;
-      margin-bottom: 8px;
-      align-items: center;
-    }
+		.assistant-box {
+			position: relative;
+			flex: 1;
+			max-width: 900px;
+		}
 
-    input,
-    select {
-      width: 100%;
-      background: #090d14;
-      border: 1px solid #2a3547;
-      color: #fff;
-      border-radius: 7px;
-      padding: 10px 12px;
-      font: inherit;
-    }
+		.assistant-box svg {
+			position: absolute;
+			top: 50%;
+			left: 15px;
+			width: 18px;
+			height: 18px;
+			color: #71859d;
+			transform: translateY(-50%);
+			pointer-events: none;
+		}
 
-    .editor-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
-      flex-wrap: wrap;
-    }
+		input,
+		select {
+			width: 100%;
+			height: 42px;
+			border: 1px solid var(--border-strong);
+			border-radius: 8px;
+			outline: none;
+			background: rgba(5, 15, 27, 0.78);
+			color: var(--text);
+			transition:
+				border-color 120ms ease,
+				box-shadow 120ms ease,
+				background 120ms ease;
+		}
 
-    .panel {
-      overflow: hidden;
-    }
+		input {
+			padding: 0 13px;
+		}
 
-    .toolbar {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      padding: 14px;
-      border-bottom: 1px solid #222c3b;
-    }
+		.assistant-box input {
+			padding-left: 44px;
+		}
 
-    .toolbar input {
-      flex: 1;
-      max-width: 430px;
-    }
+		input::placeholder {
+			color: #61748b;
+		}
 
-    .status {
-      font-size: 13px;
-      color: #9aa7ba;
-      margin-left: auto;
-    }
+		input:focus,
+		select:focus {
+			border-color: rgba(37, 199, 222, 0.65);
+			box-shadow: 0 0 0 3px rgba(22, 184, 212, 0.08);
+			background: rgba(7, 20, 35, 0.94);
+		}
 
-    .tablewrap {
-      overflow: auto;
-      max-height: 58vh;
-    }
+		.icon-button {
+			position: relative;
+			display: inline-grid;
+			place-items: center;
+			width: 42px;
+			height: 42px;
+			flex: 0 0 42px;
+			padding: 0;
+			border: 1px solid var(--border-strong);
+			border-radius: 8px;
+			background:
+				linear-gradient(
+					180deg,
+					rgba(18, 39, 61, 0.96),
+					rgba(10, 25, 42, 0.96)
+				);
+			cursor: pointer;
+			transition:
+				transform 120ms ease,
+				border-color 120ms ease,
+				background 120ms ease;
+		}
 
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      min-width: 1200px;
-    }
+		.icon-button:hover {
+			border-color: rgba(44, 204, 226, 0.5);
+			background: rgba(18, 50, 72, 0.96);
+		}
 
-    th,
-    td {
-      text-align: left;
-      padding: 11px 12px;
-      border-bottom: 1px solid #202938;
-      font-size: 13px;
-      vertical-align: top;
-    }
+		.icon-button:active {
+			transform: translateY(1px);
+		}
 
-    th {
-      position: sticky;
-      top: 0;
-      background: #151c28;
-      color: #9eacc0;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
+		.icon-button:disabled {
+			opacity: 0.4;
+			cursor: not-allowed;
+		}
 
-    td {
-      color: #dce3ed;
-    }
+		.icon-button svg {
+			width: 18px;
+			height: 18px;
+		}
 
-    .yes {
-      font-weight: 700;
-    }
+		.icon-button.accent {
+			border-color: rgba(22, 184, 212, 0.48);
+			background:
+				linear-gradient(
+					180deg,
+					rgba(15, 119, 145, 0.9),
+					rgba(10, 87, 110, 0.9)
+				);
+		}
 
-    .warn {
-      color: #f1c66d;
-    }
+		.tooltip::after {
+			position: absolute;
+			z-index: 100;
+			top: calc(100% + 9px);
+			left: 50%;
+			padding: 6px 8px;
+			border: 1px solid var(--border-strong);
+			border-radius: 6px;
+			background: #111e2d;
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+			color: #dce7f4;
+			content: attr(data-tooltip);
+			font-size: 11px;
+			font-weight: 500;
+			line-height: 1;
+			opacity: 0;
+			pointer-events: none;
+			transform: translate(-50%, -3px);
+			transition:
+				opacity 100ms ease,
+				transform 100ms ease;
+			white-space: nowrap;
+		}
 
-    .empty {
-      padding: 42px;
-      text-align: center;
-      color: #7f8da2;
-    }
+		.tooltip:hover::after {
+			opacity: 1;
+			transform: translate(-50%, 0);
+		}
 
-    .note {
-      font-size: 12px;
-      color: #718096;
-      margin-top: 12px;
-      line-height: 1.5;
-    }
+		.status-row {
+			display: flex;
+			align-items: center;
+			gap: 18px;
+			min-height: 39px;
+			margin-top: 3px;
+			border-bottom: 1px solid var(--border);
+			color: var(--muted);
+			font-size: 12px;
+		}
 
-    @media(max-width: 950px) {
-      .top,
-      .lookup-header {
-        display: block;
-      }
+		.system-status {
+			min-width: 0;
+			margin-right: auto;
+			overflow: hidden;
+			color: #8ea0b5;
+			font-style: italic;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
 
-      .actions {
-        margin-top: 18px;
-      }
+		.health {
+			display: flex;
+			align-items: center;
+			gap: 5px;
+		}
 
-      .cards {
-        grid-template-columns: repeat(2, 1fr);
-      }
+		.health-dot {
+			width: 7px;
+			height: 7px;
+			border-radius: 50%;
+			background: #33465b;
+			box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.025);
+		}
 
-      .lookup-grid,
-      .editor-row {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+		.health-dot.green.active {
+			background: var(--success);
+			box-shadow: 0 0 10px rgba(40, 209, 124, 0.42);
+		}
+
+		.health-dot.amber.active {
+			background: var(--warning);
+			box-shadow: 0 0 10px rgba(241, 184, 75, 0.42);
+		}
+
+		.health-dot.red.active {
+			background: var(--danger);
+			box-shadow: 0 0 10px rgba(239, 98, 98, 0.42);
+		}
+
+		.last-sync {
+			color: #71849a;
+			white-space: nowrap;
+		}
+
+		.stats {
+			display: grid;
+			grid-template-columns: repeat(5, minmax(130px, 1fr));
+			gap: 12px;
+			margin-top: 22px;
+		}
+
+		.stat {
+			position: relative;
+			min-height: 104px;
+			padding: 18px;
+			overflow: hidden;
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			background:
+				linear-gradient(
+					145deg,
+					rgba(15, 32, 51, 0.96),
+					rgba(10, 23, 39, 0.96)
+				);
+			box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+		}
+
+		.stat::after {
+			position: absolute;
+			right: -25px;
+			bottom: -45px;
+			width: 100px;
+			height: 100px;
+			border-radius: 50%;
+			background: rgba(22, 184, 212, 0.035);
+			content: "";
+		}
+
+		.stat-label {
+			color: #74869d;
+			font-size: 10px;
+			font-weight: 700;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+		}
+
+		.stat-value {
+			margin-top: 9px;
+			font-size: 28px;
+			font-weight: 700;
+			letter-spacing: -0.03em;
+		}
+
+		.panel {
+			margin-top: 20px;
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			background:
+				linear-gradient(
+					145deg,
+					rgba(13, 29, 47, 0.97),
+					rgba(8, 21, 36, 0.98)
+				);
+			box-shadow: var(--shadow);
+		}
+
+		.search-panel {
+			padding: 20px;
+		}
+
+		.panel-heading {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 18px;
+			margin-bottom: 17px;
+		}
+
+		.registry-search-row {
+			display: grid;
+			grid-template-columns:
+				minmax(100px, 0.8fr)
+				minmax(150px, 1.05fr)
+				minmax(210px, 1.65fr)
+				minmax(180px, 1.25fr)
+				minmax(210px, 1.5fr)
+				42px
+				42px;
+			gap: 10px;
+			align-items: end;
+		}
+
+		.form-field label {
+			display: block;
+			margin-bottom: 7px;
+			color: #7d8fa5;
+			font-size: 10px;
+			font-weight: 700;
+			letter-spacing: 0.07em;
+			text-transform: uppercase;
+		}
+
+		.table-panel {
+			overflow: hidden;
+		}
+
+		.table-header {
+			display: flex;
+			align-items: center;
+			gap: 16px;
+			min-height: 61px;
+			padding: 0 18px;
+			border-bottom: 1px solid var(--border);
+		}
+
+		.table-title {
+			font-size: 15px;
+			font-weight: 650;
+			white-space: nowrap;
+		}
+
+		.result-count {
+			margin-left: 5px;
+			color: #667a91;
+			font-size: 11px;
+			font-weight: 500;
+		}
+
+		.keyword-wrap {
+			position: relative;
+			width: min(370px, 38vw);
+			margin-left: auto;
+		}
+
+		.keyword-wrap svg {
+			position: absolute;
+			top: 50%;
+			left: 12px;
+			width: 15px;
+			height: 15px;
+			color: #64788f;
+			transform: translateY(-50%);
+		}
+
+		.keyword-wrap input {
+			height: 36px;
+			padding-left: 36px;
+			font-size: 12px;
+		}
+
+		.tablewrap {
+			max-height: 520px;
+			overflow: auto;
+		}
+
+		table {
+			width: 100%;
+			min-width: 1120px;
+			border-collapse: collapse;
+		}
+
+		th,
+		td {
+			padding: 12px 13px;
+			border-bottom: 1px solid rgba(148, 174, 207, 0.09);
+			text-align: left;
+			vertical-align: middle;
+		}
+
+		th {
+			position: sticky;
+			z-index: 5;
+			top: 0;
+			background: #0d1b2c;
+			color: #788ba2;
+			font-size: 10px;
+			font-weight: 700;
+			letter-spacing: 0.055em;
+			text-transform: uppercase;
+		}
+
+		td {
+			color: #cbd6e3;
+			font-size: 12px;
+		}
+
+		tbody tr:hover td {
+			background: rgba(31, 80, 105, 0.09);
+		}
+
+		.th-content {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 7px;
+		}
+
+		.column-menu-button {
+			display: grid;
+			place-items: center;
+			width: 22px;
+			height: 22px;
+			padding: 0;
+			border: 0;
+			border-radius: 5px;
+			background: transparent;
+			color: #536b83;
+			cursor: pointer;
+		}
+
+		.column-menu-button:hover,
+		.column-menu-button.active {
+			background: rgba(22, 184, 212, 0.1);
+			color: #2cc8df;
+		}
+
+		.column-menu-button svg {
+			width: 13px;
+			height: 13px;
+		}
+
+		.column-menu {
+			position: fixed;
+			z-index: 200;
+			display: none;
+			width: 210px;
+			padding: 9px;
+			border: 1px solid var(--border-strong);
+			border-radius: 8px;
+			background: #101e2e;
+			box-shadow: 0 18px 45px rgba(0, 0, 0, 0.4);
+		}
+
+		.column-menu.open {
+			display: block;
+		}
+
+		.column-menu button {
+			display: block;
+			width: 100%;
+			padding: 8px 9px;
+			border: 0;
+			border-radius: 5px;
+			background: transparent;
+			color: #b8c5d5;
+			font-size: 12px;
+			text-align: left;
+			cursor: pointer;
+		}
+
+		.column-menu button:hover {
+			background: rgba(22, 184, 212, 0.09);
+			color: #e5f4f7;
+		}
+
+		.column-filter-input {
+			height: 34px;
+			margin-top: 6px;
+			font-size: 12px;
+		}
+
+		.column-menu .yn-options {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 5px;
+			margin-top: 6px;
+		}
+
+		.column-menu .yn-options button {
+			padding: 7px 5px;
+			border: 1px solid var(--border);
+			text-align: center;
+		}
+
+		.empty {
+			height: 190px;
+			color: #61758c;
+			text-align: center;
+		}
+
+		.empty strong {
+			display: block;
+			margin-bottom: 6px;
+			color: #8193a8;
+			font-size: 13px;
+			font-weight: 550;
+		}
+
+		.yes {
+			color: #70dfad;
+			font-weight: 650;
+		}
+
+		.warn {
+			color: #f1c66d;
+			font-weight: 650;
+		}
+
+		.table-footer {
+			display: flex;
+			align-items: center;
+			gap: 16px;
+			min-height: 60px;
+			padding: 10px 18px;
+			border-top: 1px solid var(--border);
+			color: #71849a;
+			font-size: 11px;
+		}
+
+		.page-size {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.page-size select {
+			width: 67px;
+			height: 32px;
+			padding: 0 8px;
+			font-size: 11px;
+		}
+
+		.pagination {
+			display: flex;
+			align-items: center;
+			gap: 5px;
+			margin-left: auto;
+		}
+
+		.page-button {
+			display: grid;
+			place-items: center;
+			min-width: 30px;
+			height: 30px;
+			padding: 0 8px;
+			border: 1px solid transparent;
+			border-radius: 6px;
+			background: transparent;
+			color: #8193a8;
+			cursor: pointer;
+			font-size: 11px;
+		}
+
+		.page-button:hover:not(:disabled) {
+			border-color: var(--border);
+			background: rgba(22, 184, 212, 0.06);
+		}
+
+		.page-button.active {
+			border-color: rgba(22, 184, 212, 0.35);
+			background: rgba(22, 184, 212, 0.12);
+			color: #31cfe7;
+		}
+
+		.page-button:disabled {
+			opacity: 0.32;
+			cursor: default;
+		}
+
+		.jump {
+			display: flex;
+			align-items: center;
+			gap: 7px;
+			margin-left: 8px;
+		}
+
+		.jump input {
+			width: 54px;
+			height: 30px;
+			padding: 0 7px;
+			font-size: 11px;
+			text-align: center;
+		}
+
+		.modal-backdrop {
+			position: fixed;
+			z-index: 500;
+			inset: 0;
+			display: none;
+			place-items: center;
+			padding: 20px;
+			background: rgba(2, 8, 15, 0.72);
+			backdrop-filter: blur(6px);
+		}
+
+		.modal-backdrop.open {
+			display: grid;
+		}
+
+		.modal {
+			width: min(440px, 100%);
+			padding: 24px;
+			border: 1px solid var(--border-strong);
+			border-radius: 12px;
+			background:
+				linear-gradient(
+					145deg,
+					#122238,
+					#0a1727
+				);
+			box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55);
+		}
+
+		.modal h3 {
+			margin: 0 0 10px;
+			font-size: 18px;
+		}
+
+		.modal p {
+			margin: 0;
+			color: #8799ae;
+			font-size: 13px;
+			line-height: 1.6;
+		}
+
+		.modal-actions {
+			display: flex;
+			justify-content: flex-end;
+			gap: 9px;
+			margin-top: 22px;
+		}
+
+		.text-button {
+			min-height: 38px;
+			padding: 0 15px;
+			border: 1px solid var(--border-strong);
+			border-radius: 7px;
+			background: #122238;
+			color: #cdd8e5;
+			cursor: pointer;
+		}
+
+		.text-button.primary {
+			border-color: rgba(22, 184, 212, 0.45);
+			background: #0d718a;
+			color: white;
+		}
+
+		@media (max-width: 1180px) {
+			.app {
+				grid-template-columns: 76px minmax(0, 1fr);
+			}
+
+			.sidebar {
+				padding-inline: 12px;
+			}
+
+			.brand-copy,
+			.nav-item span,
+			.sidebar-footer {
+				display: none;
+			}
+
+			.brand {
+				justify-content: center;
+				padding-inline: 0;
+			}
+
+			.nav-item {
+				justify-content: center;
+				padding: 0;
+			}
+
+			.registry-search-row {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+		}
+
+		@media (max-width: 820px) {
+			.main {
+				padding: 22px 16px 32px;
+			}
+
+			.stats {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+			}
+
+			.assistant-row {
+				flex-wrap: wrap;
+			}
+
+			.assistant-box {
+				flex-basis: 100%;
+				max-width: none;
+			}
+
+			.registry-search-row {
+				grid-template-columns: 1fr;
+			}
+
+			.table-footer {
+				flex-wrap: wrap;
+			}
+
+			.pagination {
+				margin-left: 0;
+			}
+		}
+	</style>
 </head>
 
 <body>
-<main class="shell">
+	<div class="app">
+		<aside class="sidebar">
+			<div class="brand">
+				<div class="brand-mark">
+					<svg
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.8"
+					>
+						<path d="M5 18V9l7-4 7 4v9" />
+						<path d="M8 18v-6h8v6" />
+						<path d="M3 19h18" />
+					</svg>
+				</div>
 
-  <div class="top">
-    <div>
-      <h1>MCST DPO Registry Research</h1>
-      <p>
-        BCA MCST population reconciled against the PDPC DPO Registry
-        using UEN as the primary identity key.
-      </p>
-    </div>
+				<div class="brand-copy">
+					<strong>CERULIUS</strong>
+					<span>DPOaaS Platform</span>
+				</div>
+			</div>
 
-    <div class="actions">
-      <button id="sync" class="primary">Sync MCST Records</button>
-      <button id="retry">Retry Failed</button>
-      <a class="button" href="/api/export.xlsx">Export Excel</a>
-    </div>
-  </div>
+			<nav class="nav">
+				<button class="nav-item" type="button">
+					<svg
+						class="nav-icon"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.7"
+					>
+						<rect x="4" y="4" width="6" height="6" rx="1" />
+						<rect x="14" y="4" width="6" height="6" rx="1" />
+						<rect x="4" y="14" width="6" height="6" rx="1" />
+						<rect x="14" y="14" width="6" height="6" rx="1" />
+					</svg>
+					<span>Dashboard</span>
+				</button>
 
+				<button
+					class="nav-item active"
+					type="button"
+				>
+					<svg
+						class="nav-icon"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.7"
+					>
+						<ellipse cx="12" cy="6" rx="7" ry="3" />
+						<path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6" />
+						<path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" />
+					</svg>
+					<span>Registry</span>
+				</button>
 
-  <section class="cards">
-    <div class="card">
-      <div class="label">MCST population</div>
-      <div class="value" id="total">0</div>
-    </div>
+				<button class="nav-item" type="button">
+					<svg
+						class="nav-icon"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.7"
+					>
+						<path d="M5 20h14" />
+						<path d="M7 17V9h3v8" />
+						<path d="M14 17V4h3v13" />
+					</svg>
+					<span>Reports</span>
+				</button>
 
-    <div class="card">
-      <div class="label">Checked</div>
-      <div class="value" id="checked">0</div>
-    </div>
+				<button class="nav-item" type="button">
+					<svg
+						class="nav-icon"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.7"
+					>
+						<path d="M4 7h16" />
+						<path d="M4 12h16" />
+						<path d="M4 17h10" />
+					</svg>
+					<span>Audit Log</span>
+				</button>
 
-    <div class="card">
-      <div class="label">MCSTs with DPO</div>
-      <div class="value" id="withDpo">0</div>
-    </div>
+				<button class="nav-item" type="button">
+					<svg
+						class="nav-icon"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.7"
+					>
+						<circle cx="12" cy="12" r="3" />
+						<path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a8 8 0 0 0-1.7-1L14.5 3h-5l-.3 3.1a8 8 0 0 0-1.7 1l-2.4-1-2 3.4L5.1 11a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1a8 8 0 0 0 1.7 1l.3 3.1h5l.3-3.1a8 8 0 0 0 1.7-1l2.4 1 2-3.4-2-1.5a7 7 0 0 0 .1-1Z" />
+					</svg>
+					<span>Settings</span>
+				</button>
+			</nav>
 
-    <div class="card">
-      <div class="label">DPO rows</div>
-      <div class="value" id="dpoRows">0</div>
-    </div>
+			<div class="sidebar-footer">
+				Registry workspace
+			</div>
+		</aside>
 
-    <div class="card">
-      <div class="label">Discrepancies</div>
-      <div class="value" id="discrepancies">0</div>
-    </div>
-  </section>
+		<main class="main">
+			<div class="content">
+				<div class="breadcrumb">
+					Dashboard &nbsp;/&nbsp;
+					<span>Registry</span>
+				</div>
 
+				<div class="title-row">
+					<h1>MCST DPO Registry</h1>
+				</div>
 
-  <section class="panel lookup">
+				<div class="assistant-row">
+					<div class="assistant-box">
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.7"
+						>
+							<circle cx="11" cy="11" r="6" />
+							<path d="m16 16 4 4" />
+						</svg>
 
-    <div class="lookup-header">
-      <div>
-        <h2>PDPC Registry Lookup</h2>
-        <p>
-          Review each MCST against the official PDPC registry.
-        </p>
-      </div>
+						<input
+							id="assistantQuery"
+							type="text"
+							autocomplete="off"
+							placeholder="Ask Cerulius about this registry..."
+						/>
+					</div>
 
-      <div
-        class="lookup-state"
-        id="lookupState"
-      >
-        No MCST selected
-      </div>
-    </div>
+					<button
+						id="executeAssistant"
+						class="icon-button accent tooltip"
+						type="button"
+						data-tooltip="Execute query"
+						aria-label="Execute query"
+					>
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.8"
+						>
+							<path d="m5 12 14-7-4 14-3-5-7-2Z" />
+						</svg>
+					</button>
 
+					<div style="width:12px"></div>
 
-    <div class="lookup-grid">
-      <div class="fieldbox">
-        <div class="label">MCST#</div>
-        <div
-          class="fieldvalue"
-          id="lookupMcst"
-        >—</div>
-      </div>
+					<button
+						id="sync"
+						class="icon-button tooltip"
+						type="button"
+						data-tooltip="Synchronise MCST records"
+						aria-label="Synchronise MCST records"
+					>
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.8"
+						>
+							<path d="M20 7h-5V2" />
+							<path d="M4 17h5v5" />
+							<path d="M5.6 9A7 7 0 0 1 18 5l2 2" />
+							<path d="M18.4 15A7 7 0 0 1 6 19l-2-2" />
+						</svg>
+					</button>
 
-      <div class="fieldbox">
-        <div class="label">UEN</div>
-        <div
-          class="fieldvalue"
-          id="lookupUen"
-        >—</div>
-      </div>
+					<a
+						id="export"
+						class="icon-button tooltip"
+						href="/api/export.xlsx"
+						data-tooltip="Export Excel"
+						aria-label="Export Excel"
+					>
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.8"
+						>
+							<path d="M12 3v12" />
+							<path d="m7 10 5 5 5-5" />
+							<path d="M5 20h14" />
+						</svg>
+					</a>
+				</div>
 
-      <div class="fieldbox">
-        <div class="label">Estate Name</div>
-        <div
-          class="fieldvalue"
-          id="lookupEstate"
-        >—</div>
-      </div>
-    </div>
+				<div class="status-row">
+					<div
+						id="systemStatus"
+						class="system-status"
+					>
+						System idle
+					</div>
 
+					<div
+						class="health"
+						aria-label="System status"
+					>
+						<span
+							id="healthGreen"
+							class="health-dot green active"
+						></span>
+						<span
+							id="healthAmber"
+							class="health-dot amber"
+						></span>
+						<span
+							id="healthRed"
+							class="health-dot red"
+						></span>
+					</div>
 
-    <div class="workflow-actions">
+					<div
+						id="lastSync"
+						class="last-sync"
+					>
+						Last sync: —
+					</div>
+				</div>
 
-      <button
-        id="nextLookup"
-        class="primary"
-      >
-        Get Next MCST
-      </button>
+				<section class="stats">
+					<div class="stat">
+						<div class="stat-label">
+							MCST population
+						</div>
+						<div
+							id="total"
+							class="stat-value"
+						>
+							—
+						</div>
+					</div>
 
-      <a
-        id="openPdpc"
-        class="button"
-        href="https://www.pdpc.gov.sg/individuals/e-services/data-protection-officers-dpo-registry"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Open PDPC Registry
-      </a>
+					<div class="stat">
+						<div class="stat-label">
+							Checked
+						</div>
+						<div
+							id="checked"
+							class="stat-value"
+						>
+							—
+						</div>
+					</div>
 
-      <button
-        id="copySearchValue"
-        disabled
-      >
-        Copy Search Value
-      </button>
+					<div class="stat">
+						<div class="stat-label">
+							MCSTs with DPO
+						</div>
+						<div
+							id="withDpo"
+							class="stat-value"
+						>
+							—
+						</div>
+					</div>
 
-      <button
-        id="tryEstate"
-        disabled
-      >
-        Try Estate Name
-      </button>
+					<div class="stat">
+						<div class="stat-label">
+							DPO rows
+						</div>
+						<div
+							id="dpoRows"
+							class="stat-value"
+						>
+							—
+						</div>
+					</div>
 
-      <button
-        id="found"
-        disabled
-      >
-        DPO Result Found
-      </button>
+					<div class="stat">
+						<div class="stat-label">
+							Discrepancies
+						</div>
+						<div
+							id="discrepancies"
+							class="stat-value"
+						>
+							—
+						</div>
+					</div>
+				</section>
 
-      <button
-        id="notFound"
-        disabled
-      >
-        No Registry Result
-      </button>
+				<section class="panel search-panel">
+					<div class="panel-heading">
+						<h2>Search Registry</h2>
+					</div>
 
-      <button
-        id="verification"
-        disabled
-      >
-        Verification Required
-      </button>
+					<div class="registry-search-row">
+						<div class="form-field">
+							<label for="searchMcst">
+								MCST#
+							</label>
+							<input
+								id="searchMcst"
+								type="text"
+								autocomplete="off"
+								placeholder="e.g. 0001"
+							/>
+						</div>
 
-    </div>
+						<div class="form-field">
+							<label for="searchUen">
+								UEN
+							</label>
+							<input
+								id="searchUen"
+								type="text"
+								autocomplete="off"
+								placeholder="e.g. S68MC0001B"
+							/>
+						</div>
 
+						<div class="form-field">
+							<label for="searchEstate">
+								Estate Name
+							</label>
+							<input
+								id="searchEstate"
+								type="text"
+								autocomplete="off"
+								placeholder="Estate name"
+							/>
+						</div>
 
-    <div class="instructions">
-      Search the PDPC Registry using the displayed UEN first. If that search
-      returns no result, use <strong>Try Estate Name</strong> and complete the
-      estate-name fallback before recording <strong>No Registry Result</strong>.
-      Complete any PDPC human verification yourself in the official registry.
-      A verification prompt is not a no-result outcome.
-    </div>
+						<div class="form-field">
+							<label for="searchDpoName">
+								DPO Name
+							</label>
+							<input
+								id="searchDpoName"
+								type="text"
+								autocomplete="off"
+								placeholder="DPO name"
+							/>
+						</div>
 
+						<div class="form-field">
+							<label for="searchDpoEmail">
+								DPO Email
+							</label>
+							<input
+								id="searchDpoEmail"
+								type="text"
+								autocomplete="off"
+								placeholder="DPO email address"
+							/>
+						</div>
 
-    <div
-      class="result-editor"
-      id="resultEditor"
-    >
-      <div class="label">
-        PDPC observations
-      </div>
+						<button
+							id="executeSearch"
+							class="icon-button accent tooltip"
+							type="button"
+							data-tooltip="Search registry"
+							aria-label="Search registry"
+						>
+							<svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.8"
+							>
+								<circle cx="11" cy="11" r="6" />
+								<path d="m16 16 4 4" />
+							</svg>
+						</button>
 
-      <div
-        id="observationRows"
-        style="margin-top:10px"
-      ></div>
+						<button
+							id="loadFullTable"
+							class="icon-button tooltip"
+							type="button"
+							data-tooltip="Load full registry"
+							aria-label="Load full registry"
+						>
+							<svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.7"
+							>
+								<rect x="4" y="5" width="16" height="14" rx="1.5" />
+								<path d="M4 10h16" />
+								<path d="M9 5v14" />
+							</svg>
+						</button>
+					</div>
+				</section>
 
-      <div class="editor-actions">
-        <button id="addObservation">
-          + Add DPO
-        </button>
+				<section class="panel table-panel">
+					<div class="table-header">
+						<div class="table-title">
+							DPO Records
+							<span
+								id="resultCount"
+								class="result-count"
+							>
+								0 results
+							</span>
+						</div>
 
-        <button
-          id="submitFound"
-          class="primary"
-        >
-          Save DPO Result
-        </button>
+						<div class="keyword-wrap">
+							<svg
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.7"
+							>
+								<circle cx="11" cy="11" r="6" />
+								<path d="m16 16 4 4" />
+							</svg>
 
-        <button id="cancelFound">
-          Cancel
-        </button>
-      </div>
-    </div>
+							<input
+								id="tableKeyword"
+								type="text"
+								autocomplete="off"
+								placeholder="Filter displayed registry..."
+							/>
+						</div>
+					</div>
 
-  </section>
+					<div class="tablewrap">
+						<table>
+							<thead>
+								<tr>
+									<th>
+										<div class="th-content">
+											<span>MCST#</span>
+											<button
+												class="column-menu-button"
+												data-column="mcst"
+												aria-label="Filter MCST"
+											>
+												<svg viewBox="0 0 24 24" fill="currentColor">
+													<path d="M7 9h10l-5 6Z" />
+												</svg>
+											</button>
+										</div>
+									</th>
 
+									<th>
+										<div class="th-content">
+											<span>Estate Name</span>
+											<button
+												class="column-menu-button"
+												data-column="estate"
+												aria-label="Filter Estate Name"
+											>
+												<svg viewBox="0 0 24 24" fill="currentColor">
+													<path d="M7 9h10l-5 6Z" />
+												</svg>
+											</button>
+										</div>
+									</th>
 
-  <section class="panel">
+									<th>
+										<div class="th-content">
+											<span>UEN</span>
+											<button
+												class="column-menu-button"
+												data-column="uen"
+												aria-label="Filter UEN"
+											>
+												<svg viewBox="0 0 24 24" fill="currentColor">
+													<path d="M7 9h10l-5 6Z" />
+												</svg>
+											</button>
+										</div>
+									</th>
 
-    <div class="toolbar">
+									<th>
+										<div class="th-content">
+											<span>DPO</span>
+											<button
+												class="column-menu-button"
+												data-column="dpo"
+												aria-label="Filter DPO status"
+											>
+												<svg viewBox="0 0 24 24" fill="currentColor">
+													<path d="M7 9h10l-5 6Z" />
+												</svg>
+											</button>
+										</div>
+									</th>
 
-      <input
-        id="search"
-        placeholder="Search MCST, estate, UEN, DPO name or email"
-      />
+									<th>
+										<div class="th-content">
+											<span>DPO Name</span>
+											<button
+												class="column-menu-button"
+												data-column="dpoName"
+												aria-label="Filter DPO Name"
+											>
+												<svg viewBox="0 0 24 24" fill="currentColor">
+													<path d="M7 9h10l-5 6Z" />
+												</svg>
+											</button>
+										</div>
+									</th>
 
-      <div
-        class="status"
-        id="status"
-      >
-        Ready
-      </div>
+									<th>
+										<div class="th-content">
+											<span>DPO Email</span>
+											<button
+												class="column-menu-button"
+												data-column="dpoEmail"
+												aria-label="Filter DPO Email"
+											>
+												<svg viewBox="0 0 24 24" fill="currentColor">
+													<path d="M7 9h10l-5 6Z" />
+												</svg>
+											</button>
+										</div>
+									</th>
 
-    </div>
+									<th>
+										<div class="th-content">
+											<span>DPO Company</span>
+											<button
+												class="column-menu-button"
+												data-column="dpoCompany"
+												aria-label="Filter DPO Company"
+											>
+												<svg viewBox="0 0 24 24" fill="currentColor">
+													<path d="M7 9h10l-5 6Z" />
+												</svg>
+											</button>
+										</div>
+									</th>
 
+									<th>
+										<div class="th-content">
+											<span>Discrepancy</span>
+											<button
+												class="column-menu-button"
+												data-column="discrepancy"
+												aria-label="Filter discrepancy"
+											>
+												<svg viewBox="0 0 24 24" fill="currentColor">
+													<path d="M7 9h10l-5 6Z" />
+												</svg>
+											</button>
+										</div>
+									</th>
+								</tr>
+							</thead>
 
-    <div class="tablewrap">
+							<tbody id="rows">
+								<tr>
+									<td
+										colspan="8"
+										class="empty"
+									>
+										<strong>No records to display</strong>
+										Use Search Registry or load the full registry.
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 
-      <table>
+					<div class="table-footer">
+						<div class="page-size">
+							<span>Rows per page</span>
 
-        <thead>
-          <tr>
-            <th>MCST#</th>
-            <th>Estate Name</th>
-            <th>UEN</th>
-            <th>DPO(Y/N)</th>
-            <th>DPO Name</th>
-            <th>DPO Email</th>
-            <th>DPO Company</th>
-            <th>Record Discrepancy(Y/N)</th>
-          </tr>
-        </thead>
+							<select id="pageSize">
+								<option value="10">10</option>
+								<option value="25" selected>25</option>
+								<option value="50">50</option>
+								<option value="100">100</option>
+							</select>
+						</div>
 
-        <tbody id="rows">
-          <tr>
-            <td
-              colspan="8"
-              class="empty"
-            >
-              No records loaded.
-            </td>
-          </tr>
-        </tbody>
+						<div id="rangeText">
+							0 records
+						</div>
 
-      </table>
+						<div class="pagination">
+							<button
+								id="firstPage"
+								class="page-button"
+								type="button"
+								aria-label="First page"
+							>
+								&lt;&lt;
+							</button>
 
-    </div>
+							<button
+								id="previousPage"
+								class="page-button"
+								type="button"
+								aria-label="Previous page"
+							>
+								&lt;
+							</button>
 
-  </section>
+							<div
+								id="pageNumbers"
+								style="display:flex;gap:5px"
+							></div>
 
+							<button
+								id="nextPage"
+								class="page-button"
+								type="button"
+								aria-label="Next page"
+							>
+								&gt;
+							</button>
 
-  <div class="note">
-    “DPO = N” means no registration was found in a completed PDPC
-    Registry lookup. It does not establish that the MCST has no
-    appointed DPO outside the registry.
-  </div>
+							<button
+								id="lastPage"
+								class="page-button"
+								type="button"
+								aria-label="Last page"
+							>
+								&gt;&gt;
+							</button>
 
-</main>
+							<div class="jump">
+								<span>Page</span>
+								<input
+									id="jumpPage"
+									type="number"
+									min="1"
+									value="1"
+								/>
+							</div>
+						</div>
+					</div>
+				</section>
+			</div>
+		</main>
+	</div>
 
+	<div
+		id="columnMenu"
+		class="column-menu"
+	>
+		<button
+			id="sortAscending"
+			type="button"
+		>
+			Sort ascending
+		</button>
 
-<script>
-  const $=(id)=>document.getElementById(id); let currentJob=null,currentSearchType=null,currentSearchValue='',searchTimer;
-  const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-  const setStatus=(m)=>{$('status').textContent=m;};
-  function setMode(type){if(!currentJob){currentSearchType=null;currentSearchValue='';return;}if(type==='uen'&&currentJob.uen){currentSearchType='uen';currentSearchValue=currentJob.uen;}else{currentSearchType='estate_name';currentSearchValue=currentJob.estateName||'';} $('lookupState').textContent=`Awaiting PDPC result · ${currentSearchType==='uen'?'UEN':'Estate Name'} search`; controls(true);}
-  function controls(on){const active=!!(on&&currentJob&&currentSearchValue);$('copySearchValue').disabled=!active;$('found').disabled=!active;$('verification').disabled=!active;$('tryEstate').disabled=!(active&&currentSearchType==='uen'&&currentJob.estateName);$('notFound').disabled=!(active&&(currentSearchType==='estate_name'||!currentJob.estateName));}
-  function renderJob(){$('lookupMcst').textContent=currentJob?.mcstNo||'—';$('lookupUen').textContent=currentJob?.uen||'—';$('lookupEstate').textContent=currentJob?.estateName||'—';if(!currentJob){$('lookupState').textContent='No MCST selected';currentSearchType=null;currentSearchValue='';controls(false);}else setMode(currentJob.uen?'uen':'estate_name');}
-  function clearEditor(){$('resultEditor').classList.remove('active');$('observationRows').innerHTML='';}
-  function addObservationRow(o={}){const c=$('observationRows'),r=document.createElement('div');r.className='editor-row observation-row';const defaultUen=o.uen??(currentSearchType==='uen'?currentJob?.uen||'':'');r.innerHTML=`<input class="organisation" placeholder="PDPC Entity Name" value="${esc(o.organisationName||'')}"/><input class="observation-uen" placeholder="Returned UEN" value="${esc(defaultUen)}"/><input class="dpo-name" placeholder="DPO Name" value="${esc(o.dpoName||'')}"/><input class="dpo-email" placeholder="DPO Email" value="${esc(o.dpoEmail||'')}"/><button type="button" class="remove-observation danger">Remove</button>`;r.querySelector('.remove-observation').onclick=()=>{r.remove();if(!c.querySelector('.observation-row'))addObservationRow();};c.appendChild(r);}
-  function collect(){return [...document.querySelectorAll('.observation-row')].map(r=>({organisationName:r.querySelector('.organisation').value.trim(),uen:r.querySelector('.observation-uen').value.trim(),dpoName:r.querySelector('.dpo-name').value.trim(),dpoEmail:r.querySelector('.dpo-email').value.trim(),dpoCompany:''})).filter(x=>x.organisationName||x.uen||x.dpoName||x.dpoEmail);}
-  function renderRows(rows){$('rows').innerHTML=rows?.length?rows.map(r=>`<tr><td>${esc(r['MCST#'])}</td><td>${esc(r['Estate Name'])}</td><td>${esc(r['UEN'])}</td><td class="yes">${esc(r['DPO(Y/N)'])}</td><td>${esc(r['DPO Name'])}</td><td>${esc(r['DPO Email'])}</td><td>${esc(r['DPO Company'])}</td><td class="${r['Record Discrepancy(Y/N)']==='Y'?'warn':''}">${esc(r['Record Discrepancy(Y/N)'])}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">No matching records.</td></tr>';}
-  async function refreshStatus(){const d=await (await fetch('/api/status',{cache:'no-store'})).json();if(!d.ok)throw Error(d.error||'Status failed.');$('total').textContent=d.population.totalMcsts.toLocaleString();$('checked').textContent=d.results.checkedMcsts.toLocaleString();$('withDpo').textContent=d.results.mcstsWithDpo.toLocaleString();$('dpoRows').textContent=d.results.dpoRows.toLocaleString();$('discrepancies').textContent=d.results.discrepancies.toLocaleString();setStatus(`${d.queue.completionPercent}% complete · ${d.queue.pending} pending · ${d.queue.failed} failed`);}
-  async function loadRows(){const d=await (await fetch('/api/records',{cache:'no-store'})).json();if(!d.ok)throw Error(d.error||'Records failed.');renderRows(d.rows);}
-  async function next(){clearEditor();$('nextLookup').disabled=true;try{const d=await (await fetch('/api/run-batch',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({batchSize:1})})).json();if(!d.ok)throw Error(d.error);currentJob=d.jobs?.[0]||null;renderJob();setStatus(currentJob?`Ready for PDPC lookup: MCST ${currentJob.mcstNo}`:(d.done?'All queued MCST lookups are complete.':'No pending MCST is currently available.'));}catch(e){setStatus(e.message||String(e));}finally{$('nextLookup').disabled=false;}}
-  async function submit(payload){const d=await (await fetch('/api/submit-pdpc-result',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({mcstNo:currentJob.mcstNo,...payload})})).json();if(!d.ok)throw Error(d.error||'Unable to save PDPC result.');return d;}
-  async function finish(payload){try{controls(false);setStatus('Saving PDPC result…');await submit(payload);currentJob=null;renderJob();clearEditor();await Promise.all([refreshStatus(),loadRows()]);await next();}catch(e){setStatus(e.message||String(e));controls(true);}}
-  $('nextLookup').onclick=next;
-  $('copySearchValue').onclick=async()=>{if(!currentSearchValue)return;try{await navigator.clipboard.writeText(currentSearchValue);setStatus(`Copied ${currentSearchType==='uen'?'UEN':'estate name'}: ${currentSearchValue}`);}catch{setStatus('Unable to copy search value.');}};
-  $('tryEstate').onclick=()=>{if(!currentJob?.estateName)return;clearEditor();setMode('estate_name');setStatus(`UEN search returned no result. Search PDPC by estate name for MCST ${currentJob.mcstNo}.`);};
-  $('found').onclick=()=>{$('observationRows').innerHTML='';addObservationRow();$('resultEditor').classList.add('active');};
-  $('addObservation').onclick=()=>addObservationRow();
-  $('cancelFound').onclick=clearEditor;
-  $('submitFound').onclick=async()=>{const observations=collect();if(!observations.length)return setStatus('Enter at least one PDPC DPO result.');await finish({status:'found',searchType:currentSearchType,searchValue:currentSearchValue,observations});};
-  $('notFound').onclick=async()=>{if(currentSearchType==='uen'&&currentJob?.estateName)return setStatus('Complete the Estate Name fallback before recording No Registry Result.');if(!confirm(`Confirm the completed PDPC ${currentSearchType==='uen'?'UEN':'Estate Name'} search returned no registry result.`))return;await finish({status:'not_found',searchType:currentSearchType,searchValue:currentSearchValue});};
-  $('verification').onclick=async()=>{try{await submit({status:'verification_required',searchType:currentSearchType,searchValue:currentSearchValue});setStatus('Verification required. No DPO result was recorded.');}catch(e){setStatus(e.message||String(e));}};
-  $('sync').onclick=async()=>{try{$('sync').disabled=true;setStatus('Synchronising BCA…');const d=await (await fetch('/api/sync-bca',{method:'POST'})).json();if(!d.ok)throw Error(d.error);currentJob=null;renderJob();clearEditor();await Promise.all([refreshStatus(),loadRows()]);}catch(e){setStatus(e.message||String(e));}finally{$('sync').disabled=false;}};
-  $('retry').onclick=async()=>{try{const d=await (await fetch('/api/retry-failed',{method:'POST'})).json();if(!d.ok)throw Error(d.error);await refreshStatus();}catch(e){setStatus(e.message||String(e));}};
-  $('search').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(async()=>{const q=$('search').value.trim();if(!q)return loadRows();try{const d=await (await fetch('/api/search?q='+encodeURIComponent(q))).json();if(!d.ok)throw Error(d.error);renderRows(d.rows);}catch(e){setStatus(e.message||String(e));}},250);});
+		<button
+			id="sortDescending"
+			type="button"
+		>
+			Sort descending
+		</button>
 
-  async function initialise(){
-    renderJob();
+		<div id="columnFilterArea"></div>
 
-    try {
-      $('sync').disabled=true;
-      setStatus('Checking latest BCA MCST records…');
+		<button
+			id="clearColumnFilter"
+			type="button"
+		>
+			Clear filter
+		</button>
+	</div>
 
-      const response=await fetch('/api/sync-bca',{
-        method:'POST',
-        cache:'no-store'
-      });
+	<div
+		id="syncModal"
+		class="modal-backdrop"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="syncModalTitle"
+	>
+		<div class="modal">
+			<h3 id="syncModalTitle">
+				Synchronise MCST records?
+			</h3>
 
-      const d=await response.json();
+			<p>
+				This will retrieve the latest source records and
+				reconcile changes with the registry database.
+				Existing registry statistics remain unchanged until
+				you explicitly perform this synchronisation.
+			</p>
 
-      if(!d.ok){
-        throw Error(d.error||'BCA synchronisation failed.');
-      }
+			<div class="modal-actions">
+				<button
+					id="cancelSync"
+					class="text-button"
+					type="button"
+				>
+					Cancel
+				</button>
 
-      await Promise.all([
-        refreshStatus(),
-        loadRows()
-      ]);
-    } catch(e) {
-      try {
-        await Promise.all([
-          refreshStatus(),
-          loadRows()
-        ]);
+				<button
+					id="confirmSync"
+					class="text-button primary"
+					type="button"
+				>
+					Synchronise
+				</button>
+			</div>
+		</div>
+	</div>
 
-        setStatus(
-          `Latest BCA sync unavailable · showing cached records · ${
-            e.message||String(e)
-          }`
-        );
-      } catch(loadError) {
-        setStatus(
-          loadError.message||
-          String(loadError)
-        );
-      }
-    } finally {
-      $('sync').disabled=false;
-    }
-  }
+	<script>
+		const $ = (id) =>
+			document.getElementById(id);
 
-  initialise();
-</script>
+		const state = {
+			page: 1,
+			pageSize: 25,
+			total: 0,
+			totalPages: 0,
+			mode: 'empty',
+			keyword: '',
+			search: {
+				mcst: '',
+				uen: '',
+				estate: '',
+				dpoName: '',
+				dpoEmail: ''
+			},
+			columnFilters: {},
+			sortColumn: '',
+			sortDirection: '',
+			activeColumn: ''
+		};
 
+		const columnMap = {
+			mcst: 'MCST#',
+			estate: 'Estate Name',
+			uen: 'UEN',
+			dpo: 'DPO(Y/N)',
+			dpoName: 'DPO Name',
+			dpoEmail: 'DPO Email',
+			dpoCompany: 'DPO Company',
+			discrepancy: 'Record Discrepancy(Y/N)'
+		};
+
+		const escapeHtml = (value) =>
+			String(value ?? '')
+				.replace(
+					/[&<>"']/g,
+					(character) => ({
+						'&': '&amp;',
+						'<': '&lt;',
+						'>': '&gt;',
+						'"': '&quot;',
+						"'": '&#39;'
+					})[character]
+				);
+
+		function setSystemStatus(
+			message,
+			health = 'green'
+		) {
+			$('systemStatus').textContent =
+				message;
+
+			$('healthGreen')
+				.classList.toggle(
+					'active',
+					health === 'green'
+				);
+
+			$('healthAmber')
+				.classList.toggle(
+					'active',
+					health === 'amber'
+				);
+
+			$('healthRed')
+				.classList.toggle(
+					'active',
+					health === 'red'
+				);
+		}
+
+		function setIdle() {
+			setSystemStatus(
+				'System idle',
+				'green'
+			);
+		}
+
+		function formatSync(value) {
+			if (!value) {
+				return 'Last sync: —';
+			}
+
+			const date =
+				new Date(value);
+
+			if (
+				Number.isNaN(
+					date.getTime()
+				)
+			) {
+				return `Last sync: ${value}`;
+			}
+
+			return (
+				'Last sync: ' +
+				new Intl.DateTimeFormat(
+					'en-SG',
+					{
+						dateStyle: 'medium',
+						timeStyle: 'short'
+					}
+				).format(date)
+			);
+		}
+
+		async function refreshStatus() {
+			const response =
+				await fetch(
+					'/api/status',
+					{
+						cache: 'no-store'
+					}
+				);
+
+			const data =
+				await response.json();
+
+			if (!data.ok) {
+				throw new Error(
+					data.error ||
+					'Unable to retrieve registry status.'
+				);
+			}
+
+			$('total').textContent =
+				Number(
+					data.population
+						?.totalMcsts ?? 0
+				).toLocaleString();
+
+			$('checked').textContent =
+				Number(
+					data.results
+						?.checkedMcsts ?? 0
+				).toLocaleString();
+
+			$('withDpo').textContent =
+				Number(
+					data.results
+						?.mcstsWithDpo ?? 0
+				).toLocaleString();
+
+			$('dpoRows').textContent =
+				Number(
+					data.results
+						?.dpoRows ?? 0
+				).toLocaleString();
+
+			$('discrepancies').textContent =
+				Number(
+					data.results
+						?.discrepancies ?? 0
+				).toLocaleString();
+
+			$('lastSync').textContent =
+				formatSync(
+					data.lastSync
+				);
+		}
+
+		function collectSearch() {
+			return {
+				mcst:
+					$('searchMcst')
+						.value
+						.trim(),
+
+				uen:
+					$('searchUen')
+						.value
+						.trim(),
+
+				estate:
+					$('searchEstate')
+						.value
+						.trim(),
+
+				dpoName:
+					$('searchDpoName')
+						.value
+						.trim(),
+
+				dpoEmail:
+					$('searchDpoEmail')
+						.value
+						.trim()
+			};
+		}
+
+		function hasSearchValues(
+			search
+		) {
+			return Object
+				.values(search)
+				.some(Boolean);
+		}
+
+		function renderRows(rows) {
+			if (!rows?.length) {
+				$('rows').innerHTML = `
+					<tr>
+						<td
+							colspan="8"
+							class="empty"
+						>
+							<strong>No records to display</strong>
+							No registry records matched the current search or filters.
+						</td>
+					</tr>
+				`;
+
+				return;
+			}
+
+			$('rows').innerHTML =
+				rows
+					.map(
+						(row) => `
+							<tr>
+								<td>${escapeHtml(row['MCST#'])}</td>
+								<td>${escapeHtml(row['Estate Name'])}</td>
+								<td>${escapeHtml(row['UEN'])}</td>
+								<td class="${row['DPO(Y/N)'] === 'Y' ? 'yes' : ''}">
+									${escapeHtml(row['DPO(Y/N)'])}
+								</td>
+								<td>${escapeHtml(row['DPO Name'])}</td>
+								<td>${escapeHtml(row['DPO Email'])}</td>
+								<td>${escapeHtml(row['DPO Company'])}</td>
+								<td class="${row['Record Discrepancy(Y/N)'] === 'Y' ? 'warn' : ''}">
+									${escapeHtml(row['Record Discrepancy(Y/N)'])}
+								</td>
+							</tr>
+						`
+					)
+					.join('');
+		}
+
+		function updatePagination() {
+			const total =
+				state.total;
+
+			const page =
+				state.page;
+
+			const pageSize =
+				state.pageSize;
+
+			const totalPages =
+				state.totalPages;
+
+			$('resultCount').textContent =
+				`${total.toLocaleString()} ${
+					total === 1
+						? 'result'
+						: 'results'
+				}`;
+
+			if (!total) {
+				$('rangeText').textContent =
+					'0 records';
+			} else {
+				const start =
+					(page - 1) *
+					pageSize +
+					1;
+
+				const end =
+					Math.min(
+						page * pageSize,
+						total
+					);
+
+				$('rangeText').textContent =
+					`${start.toLocaleString()}–${end.toLocaleString()} of ${total.toLocaleString()}`;
+			}
+
+			$('firstPage').disabled =
+				page <= 1 ||
+				totalPages <= 1;
+
+			$('previousPage').disabled =
+				page <= 1 ||
+				totalPages <= 1;
+
+			$('nextPage').disabled =
+				page >= totalPages ||
+				totalPages <= 1;
+
+			$('lastPage').disabled =
+				page >= totalPages ||
+				totalPages <= 1;
+
+			$('jumpPage').value =
+				String(
+					totalPages
+						? page
+						: 1
+				);
+
+			$('jumpPage').max =
+				String(
+					Math.max(
+						totalPages,
+						1
+					)
+				);
+
+			renderPageNumbers();
+		}
+
+		function renderPageNumbers() {
+			const container =
+				$('pageNumbers');
+
+			container.innerHTML = '';
+
+			if (!state.totalPages) {
+				return;
+			}
+
+			let start =
+				Math.max(
+					1,
+					state.page - 2
+				);
+
+			let end =
+				Math.min(
+					state.totalPages,
+					start + 4
+				);
+
+			start =
+				Math.max(
+					1,
+					end - 4
+				);
+
+			for (
+				let page = start;
+				page <= end;
+				page += 1
+			) {
+				const button =
+					document.createElement(
+						'button'
+					);
+
+				button.type = 'button';
+				button.className =
+					'page-button';
+
+				if (
+					page === state.page
+				) {
+					button.classList.add(
+						'active'
+					);
+				}
+
+				button.textContent =
+					String(page);
+
+				button.onclick = () => {
+					state.page = page;
+					loadRegistry();
+				};
+
+				container.appendChild(
+					button
+				);
+			}
+		}
+
+		function buildRegistryUrl() {
+			const params =
+				new URLSearchParams();
+
+			params.set(
+				'page',
+				String(state.page)
+			);
+
+			params.set(
+				'pageSize',
+				String(state.pageSize)
+			);
+
+			if (
+				state.mode === 'full'
+			) {
+				params.set(
+					'full',
+					'1'
+				);
+			}
+
+			for (
+				const [
+					key,
+					value
+				] of Object.entries(
+					state.search
+				)
+			) {
+				if (value) {
+					params.set(
+						key,
+						value
+					);
+				}
+			}
+
+			if (state.keyword) {
+				params.set(
+					'keyword',
+					state.keyword
+				);
+			}
+
+			for (
+				const [
+					key,
+					value
+				] of Object.entries(
+					state.columnFilters
+				)
+			) {
+				if (value) {
+					params.set(
+						`filter_${key}`,
+						String(value)
+					);
+				}
+			}
+
+			if (
+				state.sortColumn &&
+				state.sortDirection
+			) {
+				params.set(
+					'sort',
+					state.sortColumn
+				);
+
+				params.set(
+					'direction',
+					state.sortDirection
+				);
+			}
+
+			return (
+				'/api/search?' +
+				params.toString()
+			);
+		}
+
+		async function loadRegistry() {
+			if (
+				state.mode === 'empty'
+			) {
+				state.total = 0;
+				state.totalPages = 0;
+				renderRows([]);
+				updatePagination();
+				return;
+			}
+
+			try {
+				setSystemStatus(
+					'Searching registry...',
+					'amber'
+				);
+
+				const response =
+					await fetch(
+						buildRegistryUrl(),
+						{
+							cache:
+								'no-store'
+						}
+					);
+
+				const data =
+					await response.json();
+
+				if (!data.ok) {
+					throw new Error(
+						data.error ||
+						'Registry search failed.'
+					);
+				}
+
+				state.total =
+					Number(
+						data.total ?? 0
+					);
+
+				state.totalPages =
+					Number(
+						data.totalPages ?? 0
+					);
+
+				if (
+					state.totalPages &&
+					state.page >
+						state.totalPages
+				) {
+					state.page =
+						state.totalPages;
+
+					return loadRegistry();
+				}
+
+				renderRows(
+					data.rows ?? []
+				);
+
+				updatePagination();
+
+				setIdle();
+			} catch (error) {
+				renderRows([]);
+
+				state.total = 0;
+				state.totalPages = 0;
+
+				updatePagination();
+
+				setSystemStatus(
+					error instanceof Error
+						? error.message
+						: String(error),
+					'red'
+				);
+			}
+		}
+
+		function executeSearch() {
+			const search =
+				collectSearch();
+
+			if (
+				!hasSearchValues(search)
+			) {
+				state.mode = 'empty';
+				state.search = search;
+				state.page = 1;
+
+				renderRows([]);
+				state.total = 0;
+				state.totalPages = 0;
+				updatePagination();
+
+				setSystemStatus(
+					'Enter at least one search parameter.',
+					'amber'
+				);
+
+				return;
+			}
+
+			state.search = search;
+			state.mode = 'search';
+			state.page = 1;
+
+			loadRegistry();
+		}
+
+		function loadFullRegistry() {
+			state.mode = 'full';
+			state.search = {
+				mcst: '',
+				uen: '',
+				estate: '',
+				dpoName: '',
+				dpoEmail: ''
+			};
+
+			$('searchMcst').value = '';
+			$('searchUen').value = '';
+			$('searchEstate').value = '';
+			$('searchDpoName').value = '';
+			$('searchDpoEmail').value = '';
+
+			state.page = 1;
+
+			loadRegistry();
+		}
+
+		function closeColumnMenu() {
+			$('columnMenu')
+				.classList
+				.remove('open');
+
+			document
+				.querySelectorAll(
+					'.column-menu-button'
+				)
+				.forEach(
+					(button) =>
+						button
+							.classList
+							.remove('active')
+				);
+		}
+
+		function openColumnMenu(
+			button
+		) {
+			const column =
+				button.dataset.column;
+
+			state.activeColumn =
+				column;
+
+			const menu =
+				$('columnMenu');
+
+			const rect =
+				button
+					.getBoundingClientRect();
+
+			menu.style.top =
+				`${rect.bottom + 5}px`;
+
+			menu.style.left =
+				`${Math.min(
+					rect.left,
+					window.innerWidth - 225
+				)}px`;
+
+			document
+				.querySelectorAll(
+					'.column-menu-button'
+				)
+				.forEach(
+					(item) =>
+						item
+							.classList
+							.remove('active')
+				);
+
+			button
+				.classList
+				.add('active');
+
+			renderColumnFilter();
+
+			menu
+				.classList
+				.add('open');
+		}
+
+		function renderColumnFilter() {
+			const area =
+				$('columnFilterArea');
+
+			const column =
+				state.activeColumn;
+
+			const existing =
+				state.columnFilters[
+					column
+				] ?? '';
+
+			if (
+				column === 'dpo' ||
+				column === 'discrepancy'
+			) {
+				area.innerHTML = `
+					<div class="yn-options">
+						<button
+							type="button"
+							data-value="Y"
+						>
+							Y
+						</button>
+
+						<button
+							type="button"
+							data-value="N"
+						>
+							N
+						</button>
+
+						<button
+							type="button"
+							data-value=""
+						>
+							All
+						</button>
+					</div>
+				`;
+
+				area
+					.querySelectorAll(
+						'[data-value]'
+					)
+					.forEach(
+						(button) => {
+							button.onclick =
+								() => {
+									const value =
+										button.dataset.value;
+
+									if (value) {
+										state.columnFilters[
+											column
+										] = value;
+									} else {
+										delete state.columnFilters[
+											column
+										];
+									}
+
+									state.page = 1;
+									closeColumnMenu();
+									loadRegistry();
+								};
+						}
+					);
+
+				return;
+			}
+
+			area.innerHTML = `
+				<input
+					id="columnFilterInput"
+					class="column-filter-input"
+					type="text"
+					placeholder="Filter column..."
+					value="${escapeHtml(existing)}"
+				/>
+			`;
+
+			const input =
+				$('columnFilterInput');
+
+			input.onkeydown =
+				(event) => {
+					if (
+						event.key !==
+						'Enter'
+					) {
+						return;
+					}
+
+					const value =
+						input.value.trim();
+
+					if (value) {
+						state.columnFilters[
+							column
+						] = value;
+					} else {
+						delete state.columnFilters[
+							column
+						];
+					}
+
+					state.page = 1;
+					closeColumnMenu();
+					loadRegistry();
+				};
+
+			setTimeout(
+				() => input.focus(),
+				0
+			);
+		}
+
+		async function performSync() {
+			$('syncModal')
+				.classList
+				.remove('open');
+
+			$('sync').disabled = true;
+
+			try {
+				setSystemStatus(
+					'Synchronising latest MCST records...',
+					'amber'
+				);
+
+				const response =
+					await fetch(
+						'/api/sync-bca',
+						{
+							method: 'POST',
+							cache: 'no-store'
+						}
+					);
+
+				const data =
+					await response.json();
+
+				if (!data.ok) {
+					throw new Error(
+						data.error ||
+						'MCST synchronisation failed.'
+					);
+				}
+
+				await refreshStatus();
+
+				if (
+					state.mode !== 'empty'
+				) {
+					await loadRegistry();
+				}
+
+				setIdle();
+			} catch (error) {
+				setSystemStatus(
+					error instanceof Error
+						? error.message
+						: String(error),
+					'red'
+				);
+			} finally {
+				$('sync').disabled =
+					false;
+			}
+		}
+
+		$('executeAssistant').onclick =
+			() => {
+				const query =
+					$('assistantQuery')
+						.value
+						.trim();
+
+				if (!query) {
+					setSystemStatus(
+						'Enter a query for the assistant.',
+						'amber'
+					);
+
+					return;
+				}
+
+				setSystemStatus(
+					'Assistant integration is not configured.',
+					'amber'
+				);
+			};
+
+		$('assistantQuery')
+			.addEventListener(
+				'keydown',
+				(event) => {
+					if (
+						event.key ===
+						'Enter'
+					) {
+						$('executeAssistant')
+							.click();
+					}
+				}
+			);
+
+		$('executeSearch').onclick =
+			executeSearch;
+
+		$('loadFullTable').onclick =
+			loadFullRegistry;
+
+		[
+			'searchMcst',
+			'searchUen',
+			'searchEstate',
+			'searchDpoName',
+			'searchDpoEmail'
+		].forEach(
+			(id) => {
+				$(id)
+					.addEventListener(
+						'keydown',
+						(event) => {
+							if (
+								event.key ===
+								'Enter'
+							) {
+								executeSearch();
+							}
+						}
+					);
+			}
+		);
+
+		let keywordTimer;
+
+		$('tableKeyword')
+			.addEventListener(
+				'input',
+				() => {
+					clearTimeout(
+						keywordTimer
+					);
+
+					keywordTimer =
+						setTimeout(
+							() => {
+								state.keyword =
+									$('tableKeyword')
+										.value
+										.trim();
+
+								state.page = 1;
+
+								if (
+									state.mode !==
+									'empty'
+								) {
+									loadRegistry();
+								}
+							},
+							300
+						);
+				}
+			);
+
+		$('pageSize').onchange =
+			() => {
+				state.pageSize =
+					Number(
+						$('pageSize')
+							.value
+					);
+
+				state.page = 1;
+
+				if (
+					state.mode !==
+					'empty'
+				) {
+					loadRegistry();
+				} else {
+					updatePagination();
+				}
+			};
+
+		$('firstPage').onclick =
+			() => {
+				if (
+					state.page <= 1
+				) {
+					return;
+				}
+
+				state.page = 1;
+				loadRegistry();
+			};
+
+		$('previousPage').onclick =
+			() => {
+				if (
+					state.page <= 1
+				) {
+					return;
+				}
+
+				state.page -= 1;
+				loadRegistry();
+			};
+
+		$('nextPage').onclick =
+			() => {
+				if (
+					state.page >=
+					state.totalPages
+				) {
+					return;
+				}
+
+				state.page += 1;
+				loadRegistry();
+			};
+
+		$('lastPage').onclick =
+			() => {
+				if (
+					!state.totalPages
+				) {
+					return;
+				}
+
+				state.page =
+					state.totalPages;
+
+				loadRegistry();
+			};
+
+		$('jumpPage')
+			.addEventListener(
+				'keydown',
+				(event) => {
+					if (
+						event.key !==
+						'Enter'
+					) {
+						return;
+					}
+
+					const page =
+						Math.max(
+							1,
+							Math.min(
+								state.totalPages ||
+									1,
+								Number(
+									$('jumpPage')
+										.value
+								) || 1
+							)
+						);
+
+					state.page = page;
+
+					if (
+						state.mode !==
+						'empty'
+					) {
+						loadRegistry();
+					}
+				}
+			);
+
+		document
+			.querySelectorAll(
+				'.column-menu-button'
+			)
+			.forEach(
+				(button) => {
+					button.onclick =
+						(event) => {
+							event.stopPropagation();
+
+							if (
+								$('columnMenu')
+									.classList
+									.contains(
+										'open'
+									) &&
+								state.activeColumn ===
+									button.dataset.column
+							) {
+								closeColumnMenu();
+								return;
+							}
+
+							openColumnMenu(
+								button
+							);
+						};
+				}
+			);
+
+		$('sortAscending').onclick =
+			() => {
+				state.sortColumn =
+					state.activeColumn;
+
+				state.sortDirection =
+					'asc';
+
+				state.page = 1;
+				closeColumnMenu();
+
+				if (
+					state.mode !==
+					'empty'
+				) {
+					loadRegistry();
+				}
+			};
+
+		$('sortDescending').onclick =
+			() => {
+				state.sortColumn =
+					state.activeColumn;
+
+				state.sortDirection =
+					'desc';
+
+				state.page = 1;
+				closeColumnMenu();
+
+				if (
+					state.mode !==
+					'empty'
+				) {
+					loadRegistry();
+				}
+			};
+
+		$('clearColumnFilter').onclick =
+			() => {
+				delete state.columnFilters[
+					state.activeColumn
+				];
+
+				if (
+					state.sortColumn ===
+					state.activeColumn
+				) {
+					state.sortColumn = '';
+					state.sortDirection = '';
+				}
+
+				state.page = 1;
+				closeColumnMenu();
+
+				if (
+					state.mode !==
+					'empty'
+				) {
+					loadRegistry();
+				}
+			};
+
+		document.addEventListener(
+			'click',
+			(event) => {
+				const menu =
+					$('columnMenu');
+
+				if (
+					menu.classList
+						.contains('open') &&
+					!menu.contains(
+						event.target
+					)
+				) {
+					closeColumnMenu();
+				}
+			}
+		);
+
+		$('sync').onclick =
+			() => {
+				$('syncModal')
+					.classList
+					.add('open');
+			};
+
+		$('cancelSync').onclick =
+			() => {
+				$('syncModal')
+					.classList
+					.remove('open');
+			};
+
+		$('confirmSync').onclick =
+			performSync;
+
+		$('syncModal').onclick =
+			(event) => {
+				if (
+					event.target ===
+					$('syncModal')
+				) {
+					$('syncModal')
+						.classList
+						.remove('open');
+				}
+			};
+
+		async function initialise() {
+			renderRows([]);
+			updatePagination();
+
+			try {
+				setSystemStatus(
+					'Loading registry status...',
+					'amber'
+				);
+
+				await refreshStatus();
+
+				setIdle();
+			} catch (error) {
+				setSystemStatus(
+					error instanceof Error
+						? error.message
+						: String(error),
+					'red'
+				);
+			}
+		}
+
+		initialise();
+	</script>
 </body>
 </html>
