@@ -586,14 +586,61 @@ export const prerender = false;
   $('copySearchValue').onclick=async()=>{if(!currentSearchValue)return;try{await navigator.clipboard.writeText(currentSearchValue);setStatus(`Copied ${currentSearchType==='uen'?'UEN':'estate name'}: ${currentSearchValue}`);}catch{setStatus('Unable to copy search value.');}};
   $('tryEstate').onclick=()=>{if(!currentJob?.estateName)return;clearEditor();setMode('estate_name');setStatus(`UEN search returned no result. Search PDPC by estate name for MCST ${currentJob.mcstNo}.`);};
   $('found').onclick=()=>{$('observationRows').innerHTML='';addObservationRow();$('resultEditor').classList.add('active');};
-  $('addObservation').onclick=()=>addObservationRow(); $('cancelFound').onclick=clearEditor;
+  $('addObservation').onclick=()=>addObservationRow();
+  $('cancelFound').onclick=clearEditor;
   $('submitFound').onclick=async()=>{const observations=collect();if(!observations.length)return setStatus('Enter at least one PDPC DPO result.');await finish({status:'found',searchType:currentSearchType,searchValue:currentSearchValue,observations});};
   $('notFound').onclick=async()=>{if(currentSearchType==='uen'&&currentJob?.estateName)return setStatus('Complete the Estate Name fallback before recording No Registry Result.');if(!confirm(`Confirm the completed PDPC ${currentSearchType==='uen'?'UEN':'Estate Name'} search returned no registry result.`))return;await finish({status:'not_found',searchType:currentSearchType,searchValue:currentSearchValue});};
   $('verification').onclick=async()=>{try{await submit({status:'verification_required',searchType:currentSearchType,searchValue:currentSearchValue});setStatus('Verification required. No DPO result was recorded.');}catch(e){setStatus(e.message||String(e));}};
   $('sync').onclick=async()=>{try{$('sync').disabled=true;setStatus('Synchronising BCA…');const d=await (await fetch('/api/sync-bca',{method:'POST'})).json();if(!d.ok)throw Error(d.error);currentJob=null;renderJob();clearEditor();await Promise.all([refreshStatus(),loadRows()]);}catch(e){setStatus(e.message||String(e));}finally{$('sync').disabled=false;}};
   $('retry').onclick=async()=>{try{const d=await (await fetch('/api/retry-failed',{method:'POST'})).json();if(!d.ok)throw Error(d.error);await refreshStatus();}catch(e){setStatus(e.message||String(e));}};
   $('search').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(async()=>{const q=$('search').value.trim();if(!q)return loadRows();try{const d=await (await fetch('/api/search?q='+encodeURIComponent(q))).json();if(!d.ok)throw Error(d.error);renderRows(d.rows);}catch(e){setStatus(e.message||String(e));}},250);});
-  renderJob();Promise.all([refreshStatus(),loadRows()]).catch(e=>setStatus(e.message||String(e)));
+
+  async function initialise(){
+    renderJob();
+
+    try {
+      $('sync').disabled=true;
+      setStatus('Checking latest BCA MCST records…');
+
+      const response=await fetch('/api/sync-bca',{
+        method:'POST',
+        cache:'no-store'
+      });
+
+      const d=await response.json();
+
+      if(!d.ok){
+        throw Error(d.error||'BCA synchronisation failed.');
+      }
+
+      await Promise.all([
+        refreshStatus(),
+        loadRows()
+      ]);
+    } catch(e) {
+      try {
+        await Promise.all([
+          refreshStatus(),
+          loadRows()
+        ]);
+
+        setStatus(
+          `Latest BCA sync unavailable · showing cached records · ${
+            e.message||String(e)
+          }`
+        );
+      } catch(loadError) {
+        setStatus(
+          loadError.message||
+          String(loadError)
+        );
+      }
+    } finally {
+      $('sync').disabled=false;
+    }
+  }
+
+  initialise();
 </script>
 
 </body>
