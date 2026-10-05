@@ -219,7 +219,7 @@ export async function getNextLookupJobs(
 export async function getLookupProgress(
 	db: D1Database
 ) {
-	const result =
+	const queue =
 		await db
 			.prepare(`
 				SELECT
@@ -232,30 +232,92 @@ export async function getLookupProgress(
 			`)
 			.first<any>();
 
+
+	/*
+	 * Registry-result statistics are calculated separately from queue
+	 * state. A completed lookup with no DPO still counts as checked,
+	 * while multiple DPO records for one MCST count as one MCST with
+	 * DPO but remain separate DPO rows.
+	 */
+	const results =
+		await db
+			.prepare(`
+				SELECT
+					COUNT(
+						DISTINCT mcst_no
+					) AS checked_mcsts,
+
+					COUNT(
+						DISTINCT CASE
+							WHEN dpo_found = 1
+							THEN mcst_no
+						END
+					) AS mcsts_with_dpo,
+
+					SUM(
+						CASE
+							WHEN dpo_found = 1
+							THEN 1
+							ELSE 0
+						END
+					) AS dpo_rows,
+
+					SUM(
+						CASE
+							WHEN record_discrepancy = 1
+							THEN 1
+							ELSE 0
+						END
+					) AS discrepancies
+				FROM dpo_records
+			`)
+			.first<any>();
+
+
 	return {
 		total:
 			Number(
-				result?.total ?? 0
+				queue?.total ?? 0
 			),
 
 		pending:
 			Number(
-				result?.pending ?? 0
+				queue?.pending ?? 0
 			),
 
 		processing:
 			Number(
-				result?.processing ?? 0
+				queue?.processing ?? 0
 			),
 
 		completed:
 			Number(
-				result?.completed ?? 0
+				queue?.completed ?? 0
 			),
 
 		failed:
 			Number(
-				result?.failed ?? 0
+				queue?.failed ?? 0
+			),
+
+		checkedMcsts:
+			Number(
+				results?.checked_mcsts ?? 0
+			),
+
+		mcstsWithDpo:
+			Number(
+				results?.mcsts_with_dpo ?? 0
+			),
+
+		dpoRows:
+			Number(
+				results?.dpo_rows ?? 0
+			),
+
+		discrepancies:
+			Number(
+				results?.discrepancies ?? 0
 			)
 	};
 }
