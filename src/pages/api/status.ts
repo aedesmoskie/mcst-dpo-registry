@@ -1,1 +1,106 @@
-import type {APIRoute} from 'astro';import {getLookupProgress} from '../../lib/db';export const prerender=false;export const GET:APIRoute=async({locals})=>{try{const db=(locals.runtime.env as any).DB as D1Database,p=await getLookupProgress(db);const pop=await db.prepare(`SELECT COUNT(DISTINCT mcst_no) total FROM mcst_records WHERE source='BCA'`).first<any>();const r=await db.prepare(`SELECT COUNT(*) dpoRows,COUNT(DISTINCT mcst_no) checkedMcsts,COUNT(DISTINCT CASE WHEN dpo_found=1 THEN mcst_no END) mcstsWithDpo,SUM(CASE WHEN record_discrepancy=1 THEN 1 ELSE 0 END) discrepancies FROM dpo_records`).first<any>();const completion=p.total?Math.round((p.completed/p.total)*100):0;return Response.json({ok:true,population:{totalMcsts:Number(pop?.total??0)},results:{checkedMcsts:Number(r?.checkedMcsts??0),mcstsWithDpo:Number(r?.mcstsWithDpo??0),dpoRows:Number(r?.dpoRows??0),discrepancies:Number(r?.discrepancies??0)},queue:{...p,completionPercent:completion}});}catch(e){return Response.json({ok:false,error:e instanceof Error?e.message:String(e)},{status:500});}};
+import type { APIRoute } from 'astro';
+
+import { getLookupProgress } from '../../lib/db';
+
+export const prerender = false;
+
+export const GET: APIRoute = async ({ locals }) => {
+	try {
+		const db =
+			(locals.runtime.env as any).DB as D1Database;
+
+		const p =
+			await getLookupProgress(db);
+
+		const pop =
+			await db
+				.prepare(`
+					SELECT
+						COUNT(DISTINCT mcst_no) total
+					FROM mcst_records
+					WHERE source = 'BCA'
+				`)
+				.first<any>();
+
+		const r =
+			await db
+				.prepare(`
+					SELECT
+						COUNT(*) dpoRows,
+						COUNT(DISTINCT mcst_no) checkedMcsts,
+						COUNT(
+							DISTINCT CASE
+								WHEN dpo_found = 1
+								THEN mcst_no
+							END
+						) mcstsWithDpo,
+						SUM(
+							CASE
+								WHEN record_discrepancy = 1
+								THEN 1
+								ELSE 0
+							END
+						) discrepancies
+					FROM dpo_records
+				`)
+				.first<any>();
+
+		const completion =
+			p.total
+				? Math.round(
+						(p.completed / p.total) * 100
+					)
+				: 0;
+
+		return Response.json({
+			ok: true,
+
+			population: {
+				totalMcsts:
+					Number(
+						pop?.total ?? 0
+					)
+			},
+
+			results: {
+				checkedMcsts:
+					Number(
+						r?.checkedMcsts ?? 0
+					),
+
+				mcstsWithDpo:
+					Number(
+						r?.mcstsWithDpo ?? 0
+					),
+
+				dpoRows:
+					Number(
+						r?.dpoRows ?? 0
+					),
+
+				discrepancies:
+					Number(
+						r?.discrepancies ?? 0
+					)
+			},
+
+			queue: {
+				...p,
+				completionPercent: completion
+			}
+		});
+	} catch (e) {
+		return Response.json(
+			{
+				ok: false,
+				error:
+					e instanceof Error
+						? e.message
+						: String(e)
+			},
+			{
+				status: 500
+			}
+		);
+	}
+};
