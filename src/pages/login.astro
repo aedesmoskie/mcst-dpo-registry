@@ -1,0 +1,465 @@
+---
+export const prerender = false;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0"
+		/>
+
+		<meta
+			name="robots"
+			content="noindex, nofollow"
+		/>
+
+		<title>Login | MCST DPO Registry</title>
+
+		<style>
+			:root {
+				font-family:
+					Inter,
+					ui-sans-serif,
+					system-ui,
+					-apple-system,
+					BlinkMacSystemFont,
+					"Segoe UI",
+					sans-serif;
+
+				color-scheme: dark;
+				background: #080b10;
+				color: #f4f6f8;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				margin: 0;
+				min-height: 100%;
+			}
+
+			body {
+				min-height: 100vh;
+				background:
+					radial-gradient(
+						circle at 50% 0%,
+						rgba(77, 106, 145, 0.12),
+						transparent 34rem
+					),
+					#080b10;
+			}
+
+			button,
+			input {
+				font: inherit;
+			}
+
+			.login-shell {
+				min-height: 100vh;
+				display: grid;
+				place-items: center;
+				padding: 32px 20px;
+			}
+
+			.login-panel {
+				width: min(100%, 420px);
+			}
+
+			.identity {
+				text-align: center;
+				margin-bottom: 30px;
+			}
+
+			.identity-mark {
+				width: 42px;
+				height: 42px;
+				margin: 0 auto 17px;
+				border: 1px solid #3d4652;
+				border-radius: 11px;
+				display: grid;
+				place-items: center;
+				background: #11161d;
+			}
+
+			.identity-mark svg {
+				width: 21px;
+				height: 21px;
+				stroke: #d7dde5;
+			}
+
+			h1 {
+				margin: 0;
+				font-size: 22px;
+				font-weight: 620;
+				letter-spacing: -0.02em;
+			}
+
+			.login-card {
+				border: 1px solid #242b34;
+				border-radius: 14px;
+				background: #0e1319;
+				padding: 27px;
+				box-shadow:
+					0 24px 70px rgba(0, 0, 0, 0.28);
+			}
+
+			.form-group {
+				margin-bottom: 18px;
+			}
+
+			label {
+				display: block;
+				margin-bottom: 8px;
+				font-size: 13px;
+				font-weight: 550;
+				color: #c9d0d8;
+			}
+
+			input {
+				width: 100%;
+				height: 44px;
+				border: 1px solid #303844;
+				border-radius: 8px;
+				background: #090d12;
+				color: #f5f7f9;
+				padding: 0 13px;
+				outline: none;
+				transition:
+					border-color 120ms ease,
+					box-shadow 120ms ease;
+			}
+
+			input::placeholder {
+				color: #606a76;
+			}
+
+			input:focus {
+				border-color: #687789;
+				box-shadow:
+					0 0 0 3px rgba(104, 119, 137, 0.12);
+			}
+
+			button {
+				width: 100%;
+				height: 44px;
+				margin-top: 4px;
+				border: 1px solid #46515f;
+				border-radius: 8px;
+				background: #e7ebef;
+				color: #11161c;
+				font-weight: 650;
+				cursor: pointer;
+				transition:
+					background 120ms ease,
+					opacity 120ms ease;
+			}
+
+			button:hover:not(:disabled) {
+				background: #ffffff;
+			}
+
+			button:disabled {
+				cursor: wait;
+				opacity: 0.65;
+			}
+
+			.message {
+				display: none;
+				margin: 0 0 18px;
+				border: 1px solid #65373b;
+				border-radius: 8px;
+				background: rgba(111, 42, 48, 0.16);
+				color: #e6b8bb;
+				padding: 10px 12px;
+				font-size: 13px;
+				line-height: 1.45;
+			}
+
+			.message.visible {
+				display: block;
+			}
+
+			.footer-note {
+				margin-top: 20px;
+				text-align: center;
+				font-size: 12px;
+				color: #69737f;
+			}
+
+			@media (max-width: 480px) {
+				.login-card {
+					padding: 22px;
+				}
+			}
+		</style>
+	</head>
+
+	<body>
+		<main class="login-shell">
+			<section
+				class="login-panel"
+				aria-labelledby="login-title"
+			>
+				<header class="identity">
+					<div
+						class="identity-mark"
+						aria-hidden="true"
+					>
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke-width="1.7"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<rect
+								x="5"
+								y="10"
+								width="14"
+								height="10"
+								rx="2"
+							></rect>
+
+							<path
+								d="M8 10V7a4 4 0 0 1 8 0v3"
+							></path>
+						</svg>
+					</div>
+
+					<h1 id="login-title">
+						MCST DPO Registry
+					</h1>
+				</header>
+
+				<div class="login-card">
+					<p
+						id="login-message"
+						class="message"
+						role="alert"
+						aria-live="polite"
+					></p>
+
+					<form id="login-form">
+						<div class="form-group">
+							<label for="email">
+								Email
+							</label>
+
+							<input
+								id="email"
+								name="email"
+								type="email"
+								autocomplete="username"
+								maxlength="254"
+								required
+								autofocus
+								placeholder="Enter your email"
+							/>
+						</div>
+
+						<div class="form-group">
+							<label for="password">
+								Password
+							</label>
+
+							<input
+								id="password"
+								name="password"
+								type="password"
+								autocomplete="current-password"
+								maxlength="256"
+								required
+								placeholder="Enter your password"
+							/>
+						</div>
+
+						<button
+							id="login-button"
+							type="submit"
+						>
+							Sign in
+						</button>
+					</form>
+				</div>
+
+				<div class="footer-note">
+					Authorised access only
+				</div>
+			</section>
+		</main>
+
+		<script>
+			const form =
+				document.getElementById(
+					'login-form'
+				);
+
+			const emailInput =
+				document.getElementById(
+					'email'
+				);
+
+			const passwordInput =
+				document.getElementById(
+					'password'
+				);
+
+			const button =
+				document.getElementById(
+					'login-button'
+				);
+
+			const message =
+				document.getElementById(
+					'login-message'
+				);
+
+
+			function showMessage(text) {
+				message.textContent =
+					text;
+
+				message.classList.add(
+					'visible'
+				);
+			}
+
+
+			function clearMessage() {
+				message.textContent =
+					'';
+
+				message.classList.remove(
+					'visible'
+				);
+			}
+
+
+			form.addEventListener(
+				'submit',
+				async (event) => {
+					event.preventDefault();
+
+					clearMessage();
+
+					const email =
+						emailInput.value
+							.trim();
+
+					const password =
+						passwordInput.value;
+
+
+					if (
+						!email ||
+						!password
+					) {
+						showMessage(
+							'Enter your email and password.'
+						);
+
+						return;
+					}
+
+
+					button.disabled =
+						true;
+
+					button.textContent =
+						'Signing in...';
+
+
+					try {
+						const response =
+							await fetch(
+								'/api/auth/login',
+								{
+									method:
+										'POST',
+
+									headers: {
+										'Content-Type':
+											'application/json'
+									},
+
+									credentials:
+										'same-origin',
+
+									body:
+										JSON.stringify(
+											{
+												email,
+												password
+											}
+										)
+								}
+							);
+
+
+						const result =
+							await response
+								.json()
+								.catch(
+									() => null
+								);
+
+
+						if (
+							!response.ok ||
+							!result?.ok
+						) {
+							showMessage(
+								result?.error ??
+									'Unable to sign in.'
+							);
+
+							passwordInput.value =
+								'';
+
+							passwordInput.focus();
+
+							return;
+						}
+
+
+						/*
+						 * Successful authentication.
+						 *
+						 * The session cookie is HttpOnly,
+						 * so JavaScript cannot access it.
+						 * The server will validate it on
+						 * the redirected request.
+						 */
+						window.location.replace(
+							'/'
+						);
+
+					} catch (error) {
+						console.error(
+							'Login request failed:',
+							error
+						);
+
+						showMessage(
+							'Unable to sign in. Please try again.'
+						);
+
+					} finally {
+						button.disabled =
+							false;
+
+						button.textContent =
+							'Sign in';
+					}
+				}
+			);
+		</script>
+	</body>
+</html>
