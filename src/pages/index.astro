@@ -481,6 +481,7 @@ const isAdmin = user?.role === 'admin';
 				minmax(180px, 1.25fr)
 				minmax(210px, 1.5fr)
 				42px
+				42px
 				42px;
 			gap: 10px;
 			align-items: end;
@@ -557,8 +558,8 @@ const isAdmin = user?.role === 'admin';
 
 		th,
 		td {
-			padding: 12px 13px;
-			border-bottom: 1px solid rgba(148, 174, 207, 0.09);
+			padding: 10px 15px;
+			border-bottom: 1px solid rgba(148, 174, 207, 0.14);
 			text-align: left;
 			vertical-align: middle;
 		}
@@ -577,7 +578,18 @@ const isAdmin = user?.role === 'admin';
 
 		td {
 			color: #cbd6e3;
-			font-size: 12px;
+			font-size: 11px;
+			line-height: 1.4;
+		}
+
+		th:first-child,
+		td:first-child {
+			padding-left: 18px;
+		}
+
+		th:last-child,
+		td:last-child {
+			padding-right: 18px;
 		}
 
 		tbody tr:hover td {
@@ -669,17 +681,39 @@ const isAdmin = user?.role === 'admin';
 		}
 
 		.empty {
-			height: 190px;
+			height: 260px;
+			padding: 30px 24px !important;
 			color: #61758c;
 			text-align: center;
 		}
 
-		.empty strong {
-			display: block;
-			margin-bottom: 6px;
-			color: #8193a8;
+		.empty-state {
+			display: flex;
+			min-height: 190px;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+		}
+
+		.empty-state svg {
+			width: 42px;
+			height: 42px;
+			margin-bottom: 4px;
+			color: #536b83;
+		}
+
+		.empty-state strong {
+			color: #91a4ba;
 			font-size: 13px;
-			font-weight: 550;
+			font-weight: 600;
+		}
+
+		.empty-state span {
+			max-width: 560px;
+			color: #61758c;
+			font-size: 11px;
+			line-height: 1.5;
 		}
 
 		.yes {
@@ -1001,16 +1035,8 @@ const isAdmin = user?.role === 'admin';
 						aria-label="System status"
 					>
 						<span
-							id="healthGreen"
+							id="healthDot"
 							class="health-dot green active"
-						></span>
-						<span
-							id="healthAmber"
-							class="health-dot amber"
-						></span>
-						<span
-							id="healthRed"
-							class="health-dot red"
 						></span>
 					</div>
 
@@ -1159,6 +1185,19 @@ const isAdmin = user?.role === 'admin';
 								<rect x="4" y="5" width="16" height="14" rx="1.5" />
 								<path d="M4 10h16" />
 								<path d="M9 5v14" />
+							</svg>
+						</button>
+
+						<button
+							id="clearTable"
+							class="icon-button tooltip"
+							type="button"
+							data-tooltip="Clear table display"
+							aria-label="Clear table display"
+						>
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+								<circle cx="12" cy="12" r="8" />
+								<path d="m9 9 6 6M15 9l-6 6" />
 							</svg>
 						</button>
 					</div>
@@ -1532,23 +1571,10 @@ const isAdmin = user?.role === 'admin';
 			$('systemStatus').textContent =
 				message;
 
-			$('healthGreen')
-				.classList.toggle(
-					'active',
-					health === 'green'
-				);
-
-			$('healthAmber')
-				.classList.toggle(
-					'active',
-					health === 'amber'
-				);
-
-			$('healthRed')
-				.classList.toggle(
-					'active',
-					health === 'red'
-				);
+			const dot = $('healthDot');
+			dot.classList.remove('green', 'amber', 'red');
+			dot.classList.add(health);
+			dot.classList.add('active');
 		}
 
 		function setIdle() {
@@ -1686,8 +1712,16 @@ const isAdmin = user?.role === 'admin';
 							colspan="8"
 							class="empty"
 						>
-							<strong>No records to display</strong>
-							No registry records matched the current search or filters.
+							<div class="empty-state">
+								<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+									<path d="M12 7h16l8 8v26H12z" />
+									<path d="M28 7v9h8" />
+									<circle cx="21" cy="26" r="5" />
+									<path d="m25 30 5 5" />
+								</svg>
+								<strong>No records to display</strong>
+								<span>Enter search criteria and click the search icon, or click the table icon to load full table.</span>
+							</div>
 						</td>
 					</tr>
 				`;
@@ -2071,6 +2105,24 @@ const isAdmin = user?.role === 'admin';
 			loadRegistry();
 		}
 
+		function clearTableDisplay() {
+			state.mode = 'empty';
+			state.page = 1;
+			state.total = 0;
+			state.totalPages = 0;
+			state.keyword = '';
+			state.columnFilters = {};
+			state.sortColumn = '';
+			state.sortDirection = '';
+			state.activeColumn = '';
+
+			$('tableKeyword').value = '';
+			renderRows([]);
+			updatePagination();
+			closeColumnMenu();
+			setIdle();
+		}
+
 		function closeColumnMenu() {
 			$('columnMenu')
 				.classList
@@ -2348,6 +2400,9 @@ const isAdmin = user?.role === 'admin';
 
 		$('loadFullTable').onclick =
 			loadFullRegistry;
+
+		$('clearTable').onclick =
+			clearTableDisplay;
 
 		[
 			'searchMcst',
