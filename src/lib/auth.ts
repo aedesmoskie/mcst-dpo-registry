@@ -29,21 +29,6 @@ const SESSION_DURATION_SECONDS =
 	60 * 60 * 12;
 
 
-/*
- * Password hashing parameters.
- *
- * PBKDF2 is provided by the Cloudflare Workers Web Crypto API,
- * avoiding an external authentication/password library.
- */
-const PBKDF2_ITERATIONS =
-	210000;
-
-const PBKDF2_HASH =
-	'SHA-256';
-
-const SALT_BYTES =
-	16;
-
 const SESSION_TOKEN_BYTES =
 	32;
 
@@ -59,30 +44,6 @@ function bytesToBase64(
 	}
 
 	return btoa(binary);
-}
-
-
-function base64ToBytes(
-	value: string
-): Uint8Array {
-	const binary =
-		atob(value);
-
-	const bytes =
-		new Uint8Array(
-			binary.length
-		);
-
-	for (
-		let i = 0;
-		i < binary.length;
-		i++
-	) {
-		bytes[i] =
-			binary.charCodeAt(i);
-	}
-
-	return bytes;
 }
 
 
@@ -112,51 +73,30 @@ function randomBytes(
 }
 
 
-async function derivePasswordHash(
-	password: string,
-	salt: Uint8Array,
-	iterations: number
+async function sha256(
+	value: string
 ): Promise<string> {
-	const encoder =
-		new TextEncoder();
+	const data =
+		new TextEncoder()
+			.encode(value);
 
-	const key =
-		await crypto.subtle.importKey(
-			'raw',
-			encoder.encode(password),
-			{
-				name: 'PBKDF2'
-			},
-			false,
-			[
-				'deriveBits'
-			]
+	const digest =
+		await crypto.subtle.digest(
+			'SHA-256',
+			data
 		);
 
-	const bits =
-		await crypto.subtle.deriveBits(
-			{
-				name: 'PBKDF2',
-				hash: PBKDF2_HASH,
-				salt,
-				iterations
-			},
-			key,
-			256
-		);
-
-	return bytesToBase64(
-		new Uint8Array(bits)
+	return bytesToHex(
+		new Uint8Array(digest)
 	);
 }
 
 
 /*
- * Stored format:
+ * Password hashing follows the same Cloudflare
+ * Web Crypto SHA-256 mechanism used by WAYPOINT.
  *
- * pbkdf2-sha256$iterations$salt$hash
- *
- * The password itself is never stored.
+ * The plaintext password is never stored.
  */
 export async function hashPassword(
 	password: string
@@ -167,24 +107,7 @@ export async function hashPassword(
 		);
 	}
 
-	const salt =
-		randomBytes(SALT_BYTES);
-
-	const hash =
-		await derivePasswordHash(
-			password,
-			salt,
-			PBKDF2_ITERATIONS
-		);
-
-	return [
-		'pbkdf2-sha256',
-		String(
-			PBKDF2_ITERATIONS
-		),
-		bytesToBase64(salt),
-		hash
-	].join('$');
+	return sha256(password);
 }
 
 
@@ -193,58 +116,14 @@ export async function verifyPassword(
 	storedHash: string
 ): Promise<boolean> {
 	try {
-		const parts =
-			storedHash.split('$');
-
-		if (parts.length !== 4) {
-			return false;
-		}
-
-		const [
-			algorithm,
-			iterationText,
-			saltText,
-			expectedHash
-		] = parts;
-
-		if (
-			algorithm !==
-			'pbkdf2-sha256'
-		) {
-			return false;
-		}
-
-		const iterations =
-			Number.parseInt(
-				iterationText,
-				10
-			);
-
-		if (
-			!Number.isFinite(
-				iterations
-			) ||
-			iterations < 100000
-		) {
-			return false;
-		}
-
-		const salt =
-			base64ToBytes(
-				saltText
-			);
-
 		const actualHash =
-			await derivePasswordHash(
-				password,
-				salt,
-				iterations
-			);
+			await sha256(password);
 
-		/*
-		 * Compare every character rather than returning
-		 * immediately on the first mismatch.
-		 */
+		const expectedHash =
+			storedHash
+				.trim()
+				.toLowerCase();
+
 		if (
 			actualHash.length !==
 			expectedHash.length
@@ -275,16 +154,7 @@ export async function verifyPassword(
 async function hashSessionToken(
 	token: string
 ): Promise<string> {
-	const digest =
-		await crypto.subtle.digest(
-			'SHA-256',
-			new TextEncoder()
-				.encode(token)
-		);
-
-	return bytesToHex(
-		new Uint8Array(digest)
-	);
+	return sha256(token);
 }
 
 
