@@ -157,8 +157,8 @@ const isAdmin = user?.role === 'admin';
 		.assistant-actions {
 			display: flex;
 			align-items: center;
-			gap: 10px;
-			margin-left: auto;
+			gap: 6px;
+			margin-left: 0;
 		}
 
 		.assistant-box svg {
@@ -306,27 +306,12 @@ const isAdmin = user?.role === 'admin';
 		}
 
 		.health-dot {
-			width: 7px;
-			height: 7px;
-			border-radius: 50%;
-			background: #33465b;
-			box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.025);
-		}
-
-		.health-dot.green.active {
+			width: 8px; height: 8px; border-radius: 50%;
 			background: var(--success);
 			box-shadow: 0 0 10px rgba(40, 209, 124, 0.42);
 		}
-
-		.health-dot.amber.active {
-			background: var(--warning);
-			box-shadow: 0 0 10px rgba(241, 184, 75, 0.42);
-		}
-
-		.health-dot.red.active {
-			background: var(--danger);
-			box-shadow: 0 0 10px rgba(239, 98, 98, 0.42);
-		}
+		.health-dot.amber { background: var(--warning); box-shadow: 0 0 10px rgba(241,184,75,.42); }
+		.health-dot.red { background: var(--danger); box-shadow: 0 0 10px rgba(239,98,98,.42); }
 
 		.last-sync {
 			color: #71849a;
@@ -480,12 +465,12 @@ const isAdmin = user?.role === 'admin';
 				minmax(210px, 1.65fr)
 				minmax(180px, 1.25fr)
 				minmax(210px, 1.5fr)
-				42px
-				42px
-				42px;
+				auto;
 			gap: 10px;
 			align-items: end;
 		}
+
+		.registry-actions { display:flex; align-items:center; gap:6px; white-space:nowrap; }
 
 		.form-field label {
 			display: block;
@@ -558,8 +543,8 @@ const isAdmin = user?.role === 'admin';
 
 		th,
 		td {
-			padding: 10px 15px;
-			border-bottom: 1px solid rgba(148, 174, 207, 0.14);
+			padding: 12px 13px;
+			border-bottom: 1px solid rgba(148, 174, 207, 0.09);
 			text-align: left;
 			vertical-align: middle;
 		}
@@ -578,18 +563,7 @@ const isAdmin = user?.role === 'admin';
 
 		td {
 			color: #cbd6e3;
-			font-size: 11px;
-			line-height: 1.4;
-		}
-
-		th:first-child,
-		td:first-child {
-			padding-left: 18px;
-		}
-
-		th:last-child,
-		td:last-child {
-			padding-right: 18px;
+			font-size: 12px;
 		}
 
 		tbody tr:hover td {
@@ -681,40 +655,35 @@ const isAdmin = user?.role === 'admin';
 		}
 
 		.empty {
-			height: 260px;
-			padding: 30px 24px !important;
+			height: 190px;
 			color: #61758c;
 			text-align: center;
 		}
 
-		.empty-state {
-			display: flex;
-			min-height: 190px;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			gap: 8px;
-		}
-
-		.empty-state svg {
-			width: 42px;
-			height: 42px;
-			margin-bottom: 4px;
-			color: #536b83;
-		}
-
-		.empty-state strong {
-			color: #91a4ba;
+		.empty strong {
+			display: block;
+			margin-bottom: 6px;
+			color: #8193a8;
 			font-size: 13px;
-			font-weight: 600;
+			font-weight: 550;
 		}
 
-		.empty-state span {
-			max-width: 560px;
-			color: #61758c;
-			font-size: 11px;
-			line-height: 1.5;
-		}
+		/* Compact registry grid; :global is required for rows inserted by innerHTML. */
+		th { padding: 10px 16px; border-right: 1px solid rgba(148,174,207,.07); border-bottom: 1px solid rgba(148,174,207,.16); }
+		th:first-child { padding-left: 20px; }
+		th:last-child { padding-right: 20px; border-right: 0; }
+		:global(#rows td) { padding: 8px 16px !important; border-right: 1px solid rgba(148,174,207,.055); border-bottom: 1px solid rgba(148,174,207,.105); color:#cbd6e3; font-size:11px !important; line-height:1.35; vertical-align:middle; }
+		:global(#rows td:first-child) { padding-left:20px !important; }
+		:global(#rows td:last-child) { padding-right:20px !important; border-right:0; }
+		:global(#rows tr:hover td) { background:rgba(31,80,105,.09); }
+		:global(#rows td.yes) { color:#70dfad; font-weight:650; }
+		:global(#rows td.warn) { color:#f1c66d; font-weight:650; }
+
+		:global(#rows td.empty) { height:235px; padding:28px 24px !important; border-right:0; text-align:center; }
+		:global(.empty-state) { min-height:175px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; }
+		:global(.empty-state-icon) { display:block; width:38px !important; height:38px !important; margin-bottom:4px; color:#60758d; }
+		:global(.empty-state strong) { color:#8ea1b6; font-size:13px; font-weight:600; }
+		:global(.empty-state span) { max-width:560px; color:#61758c; font-size:11px; line-height:1.5; }
 
 		.yes {
 			color: #70dfad;
@@ -962,6 +931,7 @@ const isAdmin = user?.role === 'admin';
 						/>
 					</div>
 
+					<div class="assistant-actions">
 					<button
 						id="executeAssistant"
 						class="icon-button accent tooltip"
@@ -979,7 +949,6 @@ const isAdmin = user?.role === 'admin';
 						</svg>
 					</button>
 
-					<div class="assistant-actions">
 					<button
 						id="sync"
 						hidden={!isAdmin}
@@ -1030,14 +999,8 @@ const isAdmin = user?.role === 'admin';
 						System idle
 					</div>
 
-					<div
-						class="health"
-						aria-label="System status"
-					>
-						<span
-							id="healthDot"
-							class="health-dot green active"
-						></span>
+					<div class="health" aria-label="System status">
+						<span id="healthDot" class="health-dot"></span>
 					</div>
 
 					<div
@@ -1150,6 +1113,7 @@ const isAdmin = user?.role === 'admin';
 								placeholder="DPO email address"
 							/>
 						</div>
+						<div class="registry-actions">
 
 						<button
 							id="executeSearch"
@@ -1187,19 +1151,12 @@ const isAdmin = user?.role === 'admin';
 								<path d="M9 5v14" />
 							</svg>
 						</button>
-
-						<button
-							id="clearTable"
-							class="icon-button tooltip"
-							type="button"
-							data-tooltip="Clear table display"
-							aria-label="Clear table display"
-						>
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
-								<circle cx="12" cy="12" r="8" />
-								<path d="m9 9 6 6M15 9l-6 6" />
-							</svg>
-						</button>
+							<button id="clearTable" class="icon-button tooltip" type="button" data-tooltip="Clear table display" aria-label="Clear table display">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+									<circle cx="12" cy="12" r="8" /><path d="m9 9 6 6M15 9l-6 6" />
+								</svg>
+							</button>
+						</div>
 					</div>
 				</section>
 
@@ -1236,7 +1193,7 @@ const isAdmin = user?.role === 'admin';
 					</div>
 
 					<div class="tablewrap">
-						<table>
+						<table class="registry-table">
 							<thead>
 								<tr>
 									<th>
@@ -1570,11 +1527,10 @@ const isAdmin = user?.role === 'admin';
 		) {
 			$('systemStatus').textContent =
 				message;
-
 			const dot = $('healthDot');
-			dot.classList.remove('green', 'amber', 'red');
-			dot.classList.add(health);
-			dot.classList.add('active');
+			dot.classList.remove('amber', 'red');
+			if (health === 'amber') dot.classList.add('amber');
+			if (health === 'red') dot.classList.add('red');
 		}
 
 		function setIdle() {
@@ -1708,16 +1664,10 @@ const isAdmin = user?.role === 'admin';
 			if (!rows?.length) {
 				$('rows').innerHTML = `
 					<tr>
-						<td
-							colspan="8"
-							class="empty"
-						>
+						<td colspan="8" class="empty">
 							<div class="empty-state">
-								<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-									<path d="M12 7h16l8 8v26H12z" />
-									<path d="M28 7v9h8" />
-									<circle cx="21" cy="26" r="5" />
-									<path d="m25 30 5 5" />
+								<svg class="empty-state-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+									<path d="M13 7.5h14l7 7V29"/><path d="M27 7.5v7h7"/><path d="M13 7.5v33h14"/><path d="M18 21h10M18 27h7"/><circle cx="32.5" cy="33" r="6.5"/><path d="m37.5 38 4 4"/>
 								</svg>
 								<strong>No records to display</strong>
 								<span>Enter search criteria and click the search icon, or click the table icon to load full table.</span>
@@ -1750,6 +1700,13 @@ const isAdmin = user?.role === 'admin';
 						`
 					)
 					.join('');
+		}
+
+		function clearTableDisplay() {
+			state.mode = 'empty'; state.page = 1; state.total = 0; state.totalPages = 0;
+			state.keyword = ''; state.columnFilters = {}; state.sortColumn = ''; state.sortDirection = ''; state.activeColumn = '';
+			$('tableKeyword').value = '';
+			renderRows([]); updatePagination(); closeColumnMenu(); setIdle();
 		}
 
 		function updatePagination() {
@@ -2105,24 +2062,6 @@ const isAdmin = user?.role === 'admin';
 			loadRegistry();
 		}
 
-		function clearTableDisplay() {
-			state.mode = 'empty';
-			state.page = 1;
-			state.total = 0;
-			state.totalPages = 0;
-			state.keyword = '';
-			state.columnFilters = {};
-			state.sortColumn = '';
-			state.sortDirection = '';
-			state.activeColumn = '';
-
-			$('tableKeyword').value = '';
-			renderRows([]);
-			updatePagination();
-			closeColumnMenu();
-			setIdle();
-		}
-
 		function closeColumnMenu() {
 			$('columnMenu')
 				.classList
@@ -2401,8 +2340,7 @@ const isAdmin = user?.role === 'admin';
 		$('loadFullTable').onclick =
 			loadFullRegistry;
 
-		$('clearTable').onclick =
-			clearTableDisplay;
+		$('clearTable').onclick = clearTableDisplay;
 
 		[
 			'searchMcst',
