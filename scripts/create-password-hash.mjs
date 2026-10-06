@@ -1,71 +1,41 @@
 import {
-	pbkdf2Sync,
-	randomBytes
+	createHash,
 } from 'node:crypto';
 
 import {
-	createInterface
-} from 'node:readline/promises';
-
-import {
-	stdin as input,
-	stdout as output
-} from 'node:process';
+	createInterface,
+} from 'node:readline';
 
 
-const PBKDF2_ITERATIONS =
-	210000;
-
-const SALT_BYTES =
-	16;
-
-const MIN_PASSWORD_LENGTH =
-	12;
+const MIN_PASSWORD_LENGTH = 12;
 
 
 function hashPassword(password) {
-	const salt =
-		randomBytes(
-			SALT_BYTES
-		);
-
-	const derivedKey =
-		pbkdf2Sync(
-			password,
-			salt,
-			PBKDF2_ITERATIONS,
-			32,
-			'sha256'
-		);
-
-	return [
-		'pbkdf2-sha256',
-		String(
-			PBKDF2_ITERATIONS
-		),
-		salt.toString(
-			'base64'
-		),
-		derivedKey.toString(
-			'base64'
-		)
-	].join('$');
+	return createHash('sha256')
+		.update(password, 'utf8')
+		.digest('hex');
 }
 
 
-const readline =
-	createInterface({
-		input,
-		output
+const readline = createInterface({
+	input: process.stdin,
+	output: process.stdout,
+});
+
+
+function ask(question) {
+	return new Promise((resolve) => {
+		readline.question(
+			question,
+			resolve
+		);
 	});
+}
 
 
 try {
 	const password =
-		await readline.question(
-			'Enter administrator password: '
-		);
-
+		await ask('Password: ');
 
 	if (
 		password.length <
@@ -78,10 +48,9 @@ try {
 
 
 	const confirmation =
-		await readline.question(
-			'Confirm administrator password: '
+		await ask(
+			'Confirm password: '
 		);
-
 
 	if (
 		password !==
@@ -94,9 +63,7 @@ try {
 
 
 	const passwordHash =
-		hashPassword(
-			password
-		);
+		hashPassword(password);
 
 
 	console.log(
@@ -108,26 +75,23 @@ try {
 	);
 
 	console.log(
-		'\nStore this hash in the users.password_hash column.'
-	);
-
-	console.log(
-		'Do not store the plaintext password.'
+		'\nHash length:',
+		passwordHash.length
 	);
 
 } catch (error) {
+	console.error(
+		'\nUnable to create password hash.'
+	);
 
 	console.error(
-		`\nError: ${
-			error instanceof Error
-				? error.message
-				: 'Unable to create password hash.'
-		}`
+		error instanceof Error
+			? error.message
+			: String(error)
 	);
 
 	process.exitCode = 1;
 
 } finally {
-
 	readline.close();
 }
