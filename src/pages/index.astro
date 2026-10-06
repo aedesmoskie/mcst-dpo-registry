@@ -150,8 +150,15 @@ const isAdmin = user?.role === 'admin';
 
 		.assistant-box {
 			position: relative;
-			flex: 1;
-			max-width: 900px;
+			flex: 1 1 auto;
+			min-width: 0;
+		}
+
+		.assistant-actions {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-left: auto;
 		}
 
 		.assistant-box svg {
@@ -207,24 +214,21 @@ const isAdmin = user?.role === 'admin';
 			height: 42px;
 			flex: 0 0 42px;
 			padding: 0;
-			border: 1px solid var(--border-strong);
+			border: 0;
 			border-radius: 8px;
-			background:
-				linear-gradient(
-					180deg,
-					rgba(18, 39, 61, 0.96),
-					rgba(10, 25, 42, 0.96)
-				);
+			background: transparent;
+			color: #9aabc0;
+			text-decoration: none;
 			cursor: pointer;
 			transition:
 				transform 120ms ease,
-				border-color 120ms ease,
+				color 120ms ease,
 				background 120ms ease;
 		}
 
 		.icon-button:hover {
-			border-color: rgba(44, 204, 226, 0.5);
-			background: rgba(18, 50, 72, 0.96);
+			background: rgba(22, 184, 212, 0.08);
+			color: #43d5e9;
 		}
 
 		.icon-button:active {
@@ -237,18 +241,12 @@ const isAdmin = user?.role === 'admin';
 		}
 
 		.icon-button svg {
-			width: 18px;
-			height: 18px;
+			width: 20px;
+			height: 20px;
 		}
 
 		.icon-button.accent {
-			border-color: rgba(22, 184, 212, 0.48);
-			background:
-				linear-gradient(
-					180deg,
-					rgba(15, 119, 145, 0.9),
-					rgba(10, 87, 110, 0.9)
-				);
+			color: #31cfe7;
 		}
 
 		.tooltip::after {
@@ -365,9 +363,74 @@ const isAdmin = user?.role === 'admin';
 			width: 100px;
 			height: 100px;
 			border-radius: 50%;
-			background: rgba(22, 184, 212, 0.035);
+			background: rgba(255, 255, 255, 0.025);
 			content: "";
 		}
+
+		.stat-content {
+			position: relative;
+			z-index: 1;
+			display: flex;
+			align-items: center;
+			gap: 14px;
+		}
+
+		.stat-icon {
+			display: grid;
+			place-items: center;
+			width: 38px;
+			height: 38px;
+			flex: 0 0 38px;
+		}
+
+		.stat-icon svg {
+			width: 30px;
+			height: 30px;
+		}
+
+		.stat-copy {
+			min-width: 0;
+		}
+
+		.stat.population {
+			border-color: rgba(19, 174, 238, 0.28);
+			background: linear-gradient(145deg, rgba(8, 83, 126, 0.72), rgba(7, 38, 67, 0.94));
+		}
+
+		.stat.population .stat-icon,
+		.stat.population .stat-value { color: #28c9ff; }
+
+		.stat.checked {
+			border-color: rgba(42, 211, 125, 0.24);
+			background: linear-gradient(145deg, rgba(10, 78, 60, 0.68), rgba(7, 37, 40, 0.94));
+		}
+
+		.stat.checked .stat-icon,
+		.stat.checked .stat-value { color: #45e692; }
+
+		.stat.with-dpo {
+			border-color: rgba(241, 184, 75, 0.24);
+			background: linear-gradient(145deg, rgba(102, 64, 27, 0.68), rgba(42, 31, 27, 0.94));
+		}
+
+		.stat.with-dpo .stat-icon,
+		.stat.with-dpo .stat-value { color: #f5b554; }
+
+		.stat.dpo-rows {
+			border-color: rgba(200, 83, 230, 0.24);
+			background: linear-gradient(145deg, rgba(84, 34, 105, 0.7), rgba(34, 25, 56, 0.94));
+		}
+
+		.stat.dpo-rows .stat-icon,
+		.stat.dpo-rows .stat-value { color: #d467ef; }
+
+		.stat.discrepancies {
+			border-color: rgba(239, 98, 98, 0.26);
+			background: linear-gradient(145deg, rgba(99, 38, 50, 0.72), rgba(46, 25, 37, 0.94));
+		}
+
+		.stat.discrepancies .stat-icon,
+		.stat.discrepancies .stat-value { color: #ff737b; }
 
 		.stat-label {
 			color: #74869d;
@@ -789,8 +852,11 @@ const isAdmin = user?.role === 'admin';
 			}
 
 			.assistant-box {
-				flex-basis: 100%;
-				max-width: none;
+				flex-basis: calc(100% - 52px);
+			}
+
+			.assistant-actions {
+				margin-left: auto;
 			}
 
 			.registry-search-row {
@@ -879,8 +945,7 @@ const isAdmin = user?.role === 'admin';
 						</svg>
 					</button>
 
-					<div style="width:12px"></div>
-
+					<div class="assistant-actions">
 					<button
 						id="sync"
 						hidden={!isAdmin}
@@ -920,6 +985,7 @@ const isAdmin = user?.role === 'admin';
 							<path d="M5 20h14" />
 						</svg>
 					</a>
+					</div>
 				</div>
 
 				<div class="status-row">
@@ -957,63 +1023,38 @@ const isAdmin = user?.role === 'admin';
 				</div>
 
 				<section class="stats">
-					<div class="stat">
-						<div class="stat-label">
-							MCST population
-						</div>
-						<div
-							id="total"
-							class="stat-value"
-						>
-							—
+					<div class="stat population">
+						<div class="stat-content">
+							<div class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 21V9h5v12"/><path d="M9 21V4h6v17"/><path d="M15 21v-9h5v9"/><path d="M6 12h1M6 15h1M11 7h2M11 10h2M11 13h2M17 15h1M17 18h1"/></svg></div>
+							<div class="stat-copy"><div class="stat-label">MCST population</div><div id="total" class="stat-value">—</div></div>
 						</div>
 					</div>
 
-					<div class="stat">
-						<div class="stat-label">
-							Checked
-						</div>
-						<div
-							id="checked"
-							class="stat-value"
-						>
-							—
+					<div class="stat checked">
+						<div class="stat-content">
+							<div class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="6"/><path d="m14.5 14.5 4.5 4.5"/></svg></div>
+							<div class="stat-copy"><div class="stat-label">Checked</div><div id="checked" class="stat-value">—</div></div>
 						</div>
 					</div>
 
-					<div class="stat">
-						<div class="stat-label">
-							MCSTs with DPO
-						</div>
-						<div
-							id="withDpo"
-							class="stat-value"
-						>
-							—
+					<div class="stat with-dpo">
+						<div class="stat-content">
+							<div class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20c.7-4 3-6 6.5-6s5.8 2 6.5 6"/></svg></div>
+							<div class="stat-copy"><div class="stat-label">MCSTs with DPO</div><div id="withDpo" class="stat-value">—</div></div>
 						</div>
 					</div>
 
-					<div class="stat">
-						<div class="stat-label">
-							DPO rows
-						</div>
-						<div
-							id="dpoRows"
-							class="stat-value"
-						>
-							—
+					<div class="stat dpo-rows">
+						<div class="stat-content">
+							<div class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4M9 12h6M9 16h6"/></svg></div>
+							<div class="stat-copy"><div class="stat-label">DPO rows</div><div id="dpoRows" class="stat-value">—</div></div>
 						</div>
 					</div>
 
-					<div class="stat">
-						<div class="stat-label">
-							Discrepancies
-						</div>
-						<div
-							id="discrepancies"
-							class="stat-value"
-						>
-							—
+					<div class="stat discrepancies">
+						<div class="stat-content">
+							<div class="stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 21 20H3Z"/><path d="M12 9v5M12 17.5v.5"/></svg></div>
+							<div class="stat-copy"><div class="stat-label">Discrepancies</div><div id="discrepancies" class="stat-value">—</div></div>
 						</div>
 					</div>
 				</section>
